@@ -1,0 +1,7 @@
+venv
+.idea
+dataset/*
+__pycache__
+*.pt
+*.png
+*.json
