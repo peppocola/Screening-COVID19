@@ -5,3 +5,5 @@ __pycache__
 *.png
 *.json
 *.csv
+*.pdf
+!report.pdf
