@@ -1,6 +1,7 @@
 import os
 import torch
 import torchvision
+import numpy as np
 import pandas as pd
 
 from PIL import Image as pil
@@ -50,6 +51,33 @@ class CXR2Dataset(torch.utils.data.Dataset):
         return self.targets
 
 
+class CXR2CompetitionDataset(torch.utils.data.Dataset):
+    def __init__(self, path, equalize=False):
+        self.path = path
+        self.equalize = equalize
+
+        # Initialize data transforms
+        self.transform = torchvision.transforms.Compose([
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize((0.5,), (0.5,))  # normalize to (-1, 1)
+        ])
+
+    def __len__(self):
+        return len(os.listdir(self.path))
+
+    def __getitem__(self, i):
+        # Obtain the filepath
+        idx = i + 1
+        filepath = os.path.join(self.path, '{}.png'.format(idx))
+
+        # Load and transform the image
+        with pil.open(filepath) as img:
+            if self.equalize:
+                img = pilops.equalize(img)
+            data = self.transform(img)
+        return data
+
+
 def load_train_valid_datasets(valid_size=0.1, equalize=False, augment=True, random_state=1816):
     # Load the train dataframe
     filepath = os.path.join(ROOT_DATAPATH, 'train', 'train.csv')
@@ -76,3 +104,10 @@ def load_test_dataset(equalize=False):
     images_path = os.path.join(ROOT_DATAPATH, 'test', 'images')
     test_data = CXR2Dataset(images_path, test_df, equalize=equalize, augment=False)
     return test_data
+
+
+def load_competition_dataset(equalize=False):
+    # Load the competition dataset
+    images_path = os.path.join(ROOT_DATAPATH, 'competition', 'images')
+    competition_data = CXR2CompetitionDataset(images_path, equalize=equalize)
+    return competition_data
