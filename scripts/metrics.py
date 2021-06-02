@@ -2,6 +2,7 @@ import os
 import time
 import torch
 import json
+import argparse
 
 from models import SXINet
 from dataset import load_test_dataset, load_train_valid_datasets
@@ -62,13 +63,22 @@ def compute_inference_time(model, data, device=None):
 
 
 if __name__ == '__main__':
-    model_name = 'ResNet50'
-    full_model_name = 'SXINet-' + model_name
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--model', type=str, help='The name of the model to use.'
+    )
+    parser.add_argument(
+        '--equalize', action='store_true', help='Whether to use equalization or not'
+    )
 
+    args = parser.parse_args()
+
+    model_name = args.model
+    full_model_name = 'SXINet-' + model_name
     # Some settings
-    batch_size = 4        # Specify a small batch size, used for testing
-    time_device = 'cuda'  # Change this to 'cpu' in order to force cpu usage when evaluating inference time
-    equalize = True      # Change this to true to enable histogram equalization
+    batch_size = 4                # Specify a small batch size, used for testing
+    time_device = 'cuda'          # Change this to 'cpu' in order to force cpu usage when evaluating inference time
+    equalize = args.equalize      # Change this to true to enable histogram equalization
 
     # Load the model
     model = load_model(model_name, equalize=equalize)
