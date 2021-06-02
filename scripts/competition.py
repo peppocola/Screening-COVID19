@@ -29,7 +29,7 @@ if __name__ == '__main__':
     model = load_model('SXINet-' + model_name, equalize=equalize)
 
     # Load the dataset
-    dataset = load_competition_dataset()
+    dataset = load_competition_dataset(equalize=equalize)
 
     # Get the device to use
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
