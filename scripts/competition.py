@@ -25,7 +25,7 @@ def preprocess_competition_images():
 if __name__ == '__main__':
     # Load the model
     equalize = True
-    model = load_model('DenseNet121', equalize=equalize)
+    model = load_model('ResNet50', equalize=equalize)
 
     # Load the dataset
     dataset = load_competition_dataset(equalize=equalize)
@@ -53,3 +53,6 @@ if __name__ == '__main__':
             y_pred.extend(predictions.cpu().tolist())
     print(y_pred)
 
+    with open('../submission.txt', 'w') as f:
+        for pred in y_pred:
+            f.write(str(pred) + '\n')
