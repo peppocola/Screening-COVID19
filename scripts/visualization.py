@@ -69,7 +69,7 @@ def save_dimensions_histogram(hist, output_dir='visualization'):
     # Plot the bar diagram of the image dimensions frequencies
     dims, freqs = zip(*hist)
     dims = list(map(lambda x: '{}x{}'.format(x[0], x[1]), dims))
-    plt.figure(figsize=(6, 3))
+    plt.figure(figsize=(6, 4))
     plt.bar(dims, freqs, log=True, width=0.6)
     plt.xticks(rotation='vertical')
     plt.ylabel('number of examples')
@@ -117,7 +117,7 @@ if __name__ == '__main__':
 
     # Save the image dimensions histogram
     histogram = list(sorted(
-        filter(lambda x: x[1] >= 5, histogram.items()),
+        filter(lambda x: x[1] >= 10, histogram.items()),
         key=lambda x: x[1], reverse=True
     ))
     save_dimensions_histogram(histogram)
