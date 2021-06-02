@@ -24,9 +24,8 @@ def preprocess_competition_images():
 
 if __name__ == '__main__':
     # Load the model
-    model_name = 'DenseNet121'
     equalize = True
-    model = load_model('SXINet-' + model_name, equalize=equalize)
+    model = load_model('DenseNet121', equalize=equalize)
 
     # Load the dataset
     dataset = load_competition_dataset(equalize=equalize)

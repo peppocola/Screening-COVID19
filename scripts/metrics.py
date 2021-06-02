@@ -11,7 +11,8 @@ from plot import plot_errors
 MODELS_PATH = '../models'
 
 
-def load_model(full_model_name, equalize=False):
+def load_model(model_name, equalize=False):
+    full_model_name = 'SXINet-' + model_name
     if equalize:
         state_filepath = os.path.join(
             MODELS_PATH, 'with-equalization', full_model_name, full_model_name + '.pt'
@@ -62,6 +63,7 @@ def compute_inference_time(model, data, device=None):
 
 if __name__ == '__main__':
     model_name = 'ResNet50'
+    full_model_name = 'SXINet-' + model_name
 
     # Some settings
     batch_size = 4        # Specify a small batch size, used for testing
@@ -69,8 +71,7 @@ if __name__ == '__main__':
     equalize = True      # Change this to true to enable histogram equalization
 
     # Load the model
-    full_model_name = 'SXINet-' + model_name
-    model = load_model(full_model_name, equalize=equalize)
+    model = load_model(model_name, equalize=equalize)
 
     # Load the datasets
     datasets = load_datasets(equalize=equalize)
