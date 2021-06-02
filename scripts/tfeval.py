@@ -1,3 +1,5 @@
+import time
+
 from sklearn.metrics import confusion_matrix
 import numpy as np
 import tensorflow as tf
@@ -7,6 +9,8 @@ import os
 import cv2
 
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+#python scripts/tfeval.py --weightspath models/COVIDNet-CXR-2 --metaname model.meta --ckptname model --n_classes 2 --testfile dataset/test.txt --testfolder dataset/test --out_tensorname norm_dense_2/Softmax:0
 
 
 def crop_top(img, percent=0.15):
@@ -234,12 +238,15 @@ def eval(sess, graph, testfile, testfolder, input_tensor, output_tensor, input_s
 
     y_test = []
     pred = []
+    start_time = time.perf_counter()
     for i in range(len(testfile)):
         line = testfile[i].split()
         x = process_image_file(os.path.join(testfolder, line[1]), 0.08, input_size)
         x = x.astype('float32') / 255.0
         y_test.append(mapping[line[2]])
         pred.append(np.array(sess.run(pred_tensor, feed_dict={image_tensor: np.expand_dims(x, axis=0)})).argmax(axis=1))
+    stop_time = time.perf_counter()
+    inf_time = (stop_time - start_time) / len(testfile)
     y_test = np.array(y_test)
     pred = np.array(pred)
 
@@ -253,6 +260,7 @@ def eval(sess, graph, testfile, testfolder, input_tensor, output_tensor, input_s
     print('Sens', ', '.join('{}: {:.3f}'.format(cls.capitalize(), class_acc[i]) for cls, i in mapping.items()))
     ppvs = [matrix[i,i]/np.sum(matrix[:,i]) if np.sum(matrix[:,i]) else 0 for i in range(len(matrix))]
     print('PPV', ', '.join('{}: {:.3f}'.format(cls.capitalize(), ppvs[i]) for cls, i in mapping.items()))
+    print('Inf_Time ' + str(inf_time*1000))
 
 
 if __name__ == '__main__':
