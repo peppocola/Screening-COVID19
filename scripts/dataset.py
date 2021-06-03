@@ -9,6 +9,7 @@ from PIL import ImageOps as pilops
 from sklearn import model_selection
 
 ROOT_DATAPATH = '../dataset/covidx-cxr2'
+SUBSET_DATAPATH = '../dataset/covidx-cxr2/subset/'
 
 
 class CXR2Dataset(torch.utils.data.Dataset):
@@ -78,6 +79,35 @@ class CXR2CompetitionDataset(torch.utils.data.Dataset):
         return data
 
 
+class CXR2SubsetDataset(torch.utils.data.Dataset):
+    def __init__(self, path, equalize=False):
+        self.path = path
+        self.equalize = equalize
+        self.listdir = []
+        listdir = sorted(os.listdir(self.path))
+        for directory in listdir:
+            self.listdir.append(os.path.join(SUBSET_DATAPATH + 'images', directory))
+
+        # Initialize data transforms
+        self.transform = torchvision.transforms.Compose([
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize((0.5,), (0.5,))  # normalize to (-1, 1)
+        ])
+
+    def __len__(self):
+        return len(os.listdir(self.path))
+
+    def __getitem__(self, i):
+        # Obtain the filepath
+        filepath = self.listdir[i]
+        # Load and transform the image
+        with pil.open(filepath) as img:
+            if self.equalize:
+                img = pilops.equalize(img)
+            data = self.transform(img)
+        return data
+
+
 def load_train_valid_datasets(valid_size=0.1, equalize=False, augment=True, random_state=1816):
     # Load the train dataframe
     filepath = os.path.join(ROOT_DATAPATH, 'train', 'train.csv')
@@ -110,4 +140,10 @@ def load_competition_dataset(equalize=False):
     # Load the competition dataset
     images_path = os.path.join(ROOT_DATAPATH, 'competition', 'images')
     competition_data = CXR2CompetitionDataset(images_path, equalize=equalize)
+    return competition_data
+
+
+def load_subset_dataset(equalize=False):
+    images_path = os.path.join(ROOT_DATAPATH, 'subset', 'images')
+    competition_data = CXR2SubsetDataset(images_path, equalize=equalize)
     return competition_data
