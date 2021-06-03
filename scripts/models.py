@@ -32,9 +32,8 @@ class SXINet(torch.nn.Module):
         elif base == 'inceptionv3':
             network = torch.nn.Sequential(
                 torch.nn.Upsample(size=(299, 299), mode='bilinear', align_corners=True),
-                torchvision.models.inception_v3(pretrained=False, num_classes=2, aux_logits=False)
+                torchvision.models.inception_v3(pretrained=False, num_classes=2, aux_logits=True, init_weights=True)
             )
-
         else:
             raise NotImplementedError('Unknown base model {}'.format(base))
         return network
