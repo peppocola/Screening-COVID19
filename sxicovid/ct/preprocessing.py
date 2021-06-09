@@ -48,7 +48,7 @@ if __name__ == '__main__':
     train_images_path = os.path.join(args.dest_path, 'train')
     if not os.path.isdir(train_images_path):
         os.makedirs(train_images_path)
-    valid_images_path = os.path.join(args.dest_path, 'val')
+    valid_images_path = os.path.join(args.dest_path, 'valid')
     if not os.path.isdir(valid_images_path):
         os.makedirs(valid_images_path)
     test_images_path = os.path.join(args.dest_path, 'test')
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     out_labels_column_names = ['filename', 'class']
     dataset_labels = {
         'train': pd.DataFrame(columns=out_labels_column_names),
-        'val': pd.DataFrame(columns=out_labels_column_names),
+        'valid': pd.DataFrame(columns=out_labels_column_names),
         'test': pd.DataFrame(columns=out_labels_column_names)
     }
 
@@ -87,7 +87,7 @@ if __name__ == '__main__':
             valid_cts = valid_df[valid_df['filename'].str.contains('^{}[_-]'.format(patient_id))]
             if not valid_cts.empty:
                 cts_df = valid_cts
-                dataset = 'val'
+                dataset = 'valid'
             else:
                 test_cts = test_df[test_df['filename'].str.contains('^{}[_-]'.format(patient_id))]
                 if not test_cts.empty:
@@ -140,11 +140,10 @@ if __name__ == '__main__':
                 with pil.open(img_filepath) as img:
                     # Preprocess the image
                     img = img.convert(mode='L').crop(box).resize(args.size, resample=pil.BICUBIC)
-                    slices.append(np.asarray(img))
+                    slices.append(img)
 
             # Save the multi-channels TIFF image
-            tiff_image = pil.fromarray(np.concatenate(slices, axis=0))
-            tiff_image.save(out_filepath, quality=90)
+            slices[0].save(out_filepath, append_images=slices[1:], save_all=True)
 
             # Append a data row to the preprocessed output CSV
             dataset_labels[dataset] = dataset_labels[dataset].append({
