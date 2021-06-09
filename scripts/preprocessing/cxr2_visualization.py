@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 from PIL import Image as pil
 from PIL import ImageOps as pilops
-from preprocessing import image_preprocess
+from cxr2_preprocessing import image_preprocess
 
 IMAGES_PATH = '/hdd/Datasets/covidx-cxr2/train'
 LABELS_FILEPATH = '/hdd/Datasets/covidx-cxr2/train.txt'

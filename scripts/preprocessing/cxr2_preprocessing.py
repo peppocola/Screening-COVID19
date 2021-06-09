@@ -41,7 +41,7 @@ if __name__ == '__main__':
     #         --greyscale --crop --size 224 224 --remove-top --dest-path covidx-cxr2-preprocessed
 
     # Instantiate the command line arguments parser
-    parser = argparse.ArgumentParser(description='Image dataset preprocessor')
+    parser = argparse.ArgumentParser(description='CXR2 Image dataset preprocessor')
     parser.add_argument(
         'labels', type=str, help='The labels text filepath.'
     )
