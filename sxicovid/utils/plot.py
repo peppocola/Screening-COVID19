@@ -1,7 +1,7 @@
 import os
 import matplotlib.pyplot as plt
 
-MISS_IMAGES_PATH = 'miss-images'
+MISS_IMAGES_PATH = 'misses'
 
 
 def save_history(history, filepath):
@@ -20,7 +20,7 @@ def save_history(history, filepath):
 def plot_cxr2_errors(dataset, errors, model_name):
     label_names = ['negative', 'positive']
 
-    miss_images_path = os.path.join(MISS_IMAGES_PATH, model_name)
+    miss_images_path = os.path.join('cxr2-' + MISS_IMAGES_PATH, model_name)
     if not os.path.isdir(miss_images_path):
         os.mkdir(miss_images_path)
 

@@ -62,7 +62,7 @@ def compute_inference_time(model, data, device=None):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--model', type=str, help='The name of the model to use.'
+        'model', type=str, help='The name of the model to use.'
     )
     parser.add_argument(
         '--equalize', action='store_true', help='Whether to use equalization or not'
