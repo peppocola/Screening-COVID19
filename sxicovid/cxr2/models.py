@@ -2,10 +2,10 @@ import torch
 import torchvision
 
 
-class SXINet(torch.nn.Module):
+class CXR2Net(torch.nn.Module):
     def __init__(self, base='alexnet'):
-        super(SXINet, self).__init__()
-        self.network = SXINet.__build_network(base)
+        super(CXR2Net, self).__init__()
+        self.network = CXR2Net.__build_network(base)
 
     def forward(self, x):
         x = x.repeat([1, 3, 1, 1])

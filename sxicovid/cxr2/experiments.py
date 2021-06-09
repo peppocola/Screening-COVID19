@@ -2,18 +2,18 @@ import os
 import json
 import torch
 
-from models import SXINet
-from plot import save_history
-from train import train_classifier
-from evaluate import test_classifier
-from dataset import load_train_valid_datasets, load_test_dataset
+from sxicovid.cxr2.models import CXR2Net
+from sxicovid.utils.plot import save_history
+from sxicovid.utils.train import train_classifier
+from sxicovid.utils.evaluate import test_classifier
+from sxicovid.cxr2.dataset import load_train_valid_datasets, load_test_dataset
 
-EXPERIMENTS_PATH = 'experiments'
+EXPERIMENTS_PATH = 'cxr2-experiments'
 
 
 def run_experiment(model_name, equalize=False):
     # Instantiate the model
-    model = SXINet(base=model_name.lower())
+    model = CXR2Net(base=model_name.lower())
     print(model)
 
     # Load the datasets
@@ -37,19 +37,17 @@ def run_experiment(model_name, equalize=False):
         experiment_path = os.path.join(EXPERIMENTS_PATH, 'with-equalization')
     else:
         experiment_path = os.path.join(EXPERIMENTS_PATH, 'without-equalization')
-    try:
+    if not os.path.isdir(experiment_path):
         os.mkdir(experiment_path)
-    except OSError:
-        pass
 
     # Test the classifier and save the classification report to a JSON file
     report, errors = test_classifier(model, test_data, batch_size=32)
-    with open(os.path.join(experiment_path, 'SXINet-' + model_name + '-report.json'), 'w') as file:
+    with open(os.path.join(experiment_path, 'CXR2Net-' + model_name + '-report.json'), 'w') as file:
         json.dump(report, file, indent=4)
 
     # Save both the model and training history
-    torch.save(model.state_dict(), os.path.join(experiment_path, 'SXINet-' + model_name + '.pt'))
-    save_history(history, os.path.join(experiment_path, 'SXINet-' + model_name + '-history.png'))
+    torch.save(model.state_dict(), os.path.join(experiment_path, 'CXR2Net-' + model_name + '.pt'))
+    save_history(history, os.path.join(experiment_path, 'CXR2Net-' + model_name + '-history.png'))
 
 
 if __name__ == '__main__':

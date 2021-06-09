@@ -3,13 +3,14 @@ import torch
 
 from tqdm import tqdm
 from PIL import Image as pil
-from metrics import load_model
-from dataset import load_competition_dataset
-from preprocessing import image_preprocess
+
+from sxicovid.cxr2.metrics import load_model
+from sxicovid.cxr2.dataset import load_competition_dataset
+from sxicovid.cxr2.preprocessing import image_preprocess
 
 
 COMPETITION_IMAGES_PATH = '/hdd/Datasets/covidx-cxr2/competition_test'
-PREPROC_COMPETITION_IMAGES_PATH = '../dataset/covidx-cxr2/competition/images'
+PREPROC_COMPETITION_IMAGES_PATH = 'datasets/covidx-cxr2/competition/images'
 
 
 def preprocess_competition_images():
@@ -53,6 +54,6 @@ if __name__ == '__main__':
             y_pred.extend(predictions.cpu().tolist())
     print(y_pred)
 
-    with open('../submission.txt', 'w') as f:
+    with open('submission.txt', 'w') as f:
         for pred in y_pred:
             f.write(str(pred) + '\n')

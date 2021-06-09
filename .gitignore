@@ -2,10 +2,3 @@ venv
 .idea
 __pycache__
 dataset/**
-*.pt
-*.png
-*.json
-*.csv
-*.pdf
-!report.pdf
-!presentation.pdf

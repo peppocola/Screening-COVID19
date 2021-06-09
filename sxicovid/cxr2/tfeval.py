@@ -10,7 +10,7 @@ import cv2
 
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-#python scripts/tfeval.py --weightspath models/COVIDNet-CXR-2 --metaname model.meta --ckptname model --n_classes 2 --testfile dataset/test.txt --testfolder dataset/test --out_tensorname norm_dense_2/Softmax:0
+# python scripts/tfeval.py --weightspath models/COVIDNet-CXR-2 --metaname model.meta --ckptname model --n_classes 2 --testfile dataset/test.txt --testfolder dataset/test --out_tensorname norm_dense_2/Softmax:0
 
 
 def crop_top(img, percent=0.15):

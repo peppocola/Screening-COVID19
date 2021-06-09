@@ -1,15 +1,13 @@
 import os
 import torch
 import torchvision
-import numpy as np
 import pandas as pd
-
 from PIL import Image as pil
 from PIL import ImageOps as pilops
 from sklearn import model_selection
 
-ROOT_DATAPATH = '../dataset/covidx-cxr2'
-SUBSET_DATAPATH = '../dataset/covidx-cxr2/subset/'
+ROOT_DATAPATH = 'datasets/covidx-cxr2'
+SUBSET_DATAPATH = 'datasets/covidx-cxr2/subset/'
 
 
 class CXR2Dataset(torch.utils.data.Dataset):

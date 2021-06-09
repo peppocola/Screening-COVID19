@@ -1,14 +1,15 @@
 import argparse
 import os
 import torch
-
-from PIL import Image as pil
-from metrics import load_model
-from dataset import load_competition_dataset, load_subset_dataset
-from preprocessing import image_preprocess
 import shutil
 
-PREPROC_SUBSET_IMAGES_PATH = '../dataset/covidx-cxr2/subset/images/'
+from PIL import Image as pil
+
+from sxicovid.cxr2.metrics import load_model
+from sxicovid.cxr2.dataset import load_subset_dataset
+from sxicovid.cxr2.preprocessing import image_preprocess
+
+PREPROC_SUBSET_IMAGES_PATH = 'datasets/covidx-cxr2/subset/images'
 
 
 def preprocess_subset_images(path):
@@ -28,7 +29,6 @@ def preprocess_subset_images(path):
 
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--model', type=str, help='The name of the model to use.'

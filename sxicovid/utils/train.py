@@ -1,11 +1,12 @@
 import time
 import torch
+import torchvision
 import numpy as np
-import torchvision.models
 
 from tqdm import tqdm
-from models import SXINet
-from utils import EarlyStopping, RunningAverageMetric, get_optimizer
+
+from sxicovid.cxr2.models import CXR2Net
+from sxicovid.utils.torch import EarlyStopping, RunningAverageMetric, get_optimizer
 
 
 def train_classifier(
@@ -90,7 +91,7 @@ def train_classifier(
         for inputs, targets in tk_train:
             inputs, targets = inputs.to(device), targets.to(device)
             optimizer.zero_grad()
-            if isinstance(model, SXINet) and isinstance(model.network, torch.nn.Sequential) \
+            if isinstance(model, CXR2Net) and isinstance(model.network, torch.nn.Sequential) \
                     and isinstance(model.network[1], torchvision.models.Inception3):
                 outputs, aux_outputs = model(inputs)
                 outputs = torch.log_softmax(outputs, dim=1)

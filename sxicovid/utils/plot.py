@@ -1,9 +1,7 @@
 import os
 import matplotlib.pyplot as plt
 
-from dataset import CXR2Dataset
-
-IMG_PATH = '../img/'
+MISS_IMAGES_PATH = 'miss-images'
 
 
 def save_history(history, filepath):
@@ -19,22 +17,18 @@ def save_history(history, filepath):
     fig.savefig(filepath, dpi=192)
 
 
-def plot_errors(dataset: CXR2Dataset, errors, model_name):
+def plot_cxr2_errors(dataset, errors, model_name):
     label_names = ['negative', 'positive']
 
-    try:
-        os.mkdir(IMG_PATH + model_name)
-    except OSError:
-        pass
+    miss_images_path = os.path.join(MISS_IMAGES_PATH, model_name)
+    if not os.path.isdir(miss_images_path):
+        os.mkdir(miss_images_path)
 
     for (idx, label) in errors:
         tensor, _ = dataset.__getitem__(idx)
         img = tensor.numpy().squeeze()
-
         plt.figure(figsize=(4, 4))
         plt.title(label_names[label])
-
-        path = IMG_PATH + model_name + '/' 'predict_error' + str(idx) + '_' + label_names[label] + '.png'
-
+        path = os.path.join(miss_images_path, 'predict_error{}_{}.png'.format(idx, label_names[label]))
         plt.imsave(path, img, cmap='gray', format='png')
         plt.close()

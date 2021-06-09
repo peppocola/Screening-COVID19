@@ -6,13 +6,14 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 from PIL import Image as pil
 from PIL import ImageOps as pilops
-from cxr2_preprocessing import image_preprocess
+
+from sxicovid.cxr2.preprocessing import image_preprocess
 
 IMAGES_PATH = '/hdd/Datasets/covidx-cxr2/train'
 LABELS_FILEPATH = '/hdd/Datasets/covidx-cxr2/train.txt'
 
 
-def save_visualizations(filepath, identifier, output_dir='visualization'):
+def save_visualizations(filepath, identifier, output_dir='cxr2-visualization'):
     # Check the presence of the output directory
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
@@ -58,7 +59,7 @@ def save_visualizations(filepath, identifier, output_dir='visualization'):
         plt.clf()
 
 
-def save_dimensions_histogram(hist, output_dir='visualization'):
+def save_dimensions_histogram(hist, output_dir='cxr2-visualization'):
     # Check the presence of the output directory
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)

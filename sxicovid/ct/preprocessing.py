@@ -9,6 +9,10 @@ from PIL import Image as pil
 
 
 if __name__ == '__main__':
+    # Usage example:
+    #   python sxicovid/ct/preprocessing.py /hdd/Datasets/covidx-ct/metadata.csv /hdd/Datasets/covidx-ct/train_COVIDx_CT-2A.txt /hdd/Datasets/covidx-ct/val_COVIDx_CT-2A.txt \
+    #       /hdd/Datasets/covidx-ct/test_COVIDx_CT-2A.txt --src-path /hdd/Datasets/covidx-ct/2A_images --size 224 224 --ct-length 32 --dest-path datasets/covidx-ct
+
     # Instantiate the command line arguments parser
     parser = argparse.ArgumentParser(description='CT Image dataset preprocessor')
     parser.add_argument(

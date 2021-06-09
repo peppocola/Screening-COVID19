@@ -37,8 +37,8 @@ def image_preprocess(img, greyscale, crop, size, remove_top):
 
 if __name__ == '__main__':
     # Usage example:
-    #     python preprocessing.py covidx-cxr2/train.txt --src-path covidx-cxr2/train \
-    #         --greyscale --crop --size 224 224 --remove-top --dest-path covidx-cxr2-preprocessed
+    #   python sxicovid/cxr2/preprocessing.py /hdd/Datasets/covidx-cxr2/train.txt --src-path /hdd/Datasets/covidx-cxr2/train \
+    #       --greyscale --crop --size 224 224 --remove-top --dest-path datasets/covidx-cxr2/train
 
     # Instantiate the command line arguments parser
     parser = argparse.ArgumentParser(description='CXR2 Image dataset preprocessor')
@@ -67,26 +67,6 @@ if __name__ == '__main__':
         '--dest-path', type=str, default='.', help='The output dataset path.'
     )
     args = parser.parse_args()
-
-    # Check the labels text filepath
-    if not os.path.isfile(args.labels):
-        print('The labels text filepath is not valid!')
-        quit(1)
-
-    # Check input dataset path
-    if not os.path.isdir(args.src_path):
-        print('The source dataset path is not valid!')
-        quit(1)
-
-    # Check output dataset path
-    if not os.path.isdir(args.dest_path):
-        print('The destination dataset path is not valid!')
-        quit(1)
-
-    # Check the output images size
-    if args.size[0] <= 0 or args.size[1] <= 0:
-        print('Invalid output images size!')
-        quit(1)
 
     # Create the images directory
     images_path = os.path.join(args.dest_path, 'images')
