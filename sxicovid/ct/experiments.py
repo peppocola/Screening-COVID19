@@ -16,17 +16,18 @@ if __name__ == '__main__':
     train_data, valid_data, test_data = load_datasets()
 
     # Instantiate the model
-    model = CTNet(ct_size=16)
+    model = CTNet(input_size=16)
     print(model)
+
+    batch_size = 8
 
     train_classifier(
         model, train_data, valid_data,
-        lr=1e-3, optimizer='adam', batch_size=16, epochs=100, patience=5, n_workers=2
+        lr=1e-3, optimizer='adam', batch_size=batch_size, epochs=100, patience=5, n_workers=2
     )
 
     report, _ = test_classifier(
-        model, test_data,
-        batch_size=16, n_workers=2
+        model, test_data, batch_size=batch_size, n_workers=2
     )
 
     print(report)
