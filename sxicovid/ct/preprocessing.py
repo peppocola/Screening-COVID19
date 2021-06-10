@@ -8,6 +8,22 @@ from tqdm import tqdm
 from PIL import Image as pil
 
 
+def find_patient_cts(regex):
+    train_cts = train_df[train_df['filename'].str.contains(regex)]
+    if not train_cts.empty:
+        return train_cts, 'train'
+    else:
+        valid_cts = valid_df[valid_df['filename'].str.contains(regex)]
+        if not valid_cts.empty:
+            return valid_cts, 'valid'
+        else:
+            test_cts = test_df[test_df['filename'].str.contains(regex)]
+            if not test_cts.empty:
+                return test_cts, 'test'
+            else:
+                return None, None
+
+
 if __name__ == '__main__':
     # Usage example:
     #   python sxicovid/ct/preprocessing.py /hdd/Datasets/covidx-ct/metadata.csv /hdd/Datasets/covidx-ct/train_COVIDx_CT-2A.txt /hdd/Datasets/covidx-ct/val_COVIDx_CT-2A.txt \
@@ -34,7 +50,7 @@ if __name__ == '__main__':
         '--size', nargs=2, type=int, default=(224, 224), help='The size of the output images.'
     )
     parser.add_argument(
-        '--ct-length', type=int, default=32, help='The fixed length of a CT scan.'
+        '--ct-length', type=int, default=16, help='The fixed length of a CT scan.'
     )
     parser.add_argument(
         '--dest-path', type=str, default='.', help='The output dataset path.'
@@ -78,29 +94,19 @@ if __name__ == '__main__':
         patient_id = example['patient id']
 
         # Obtain the CTs for a certain patient
-        dataset = None
-        train_cts = train_df[train_df['filename'].str.contains('^{}[_-]'.format(patient_id))]
-        if not train_cts.empty:
-            cts_df = train_cts
-            dataset = 'train'
-        else:
-            valid_cts = valid_df[valid_df['filename'].str.contains('^{}[_-]'.format(patient_id))]
-            if not valid_cts.empty:
-                cts_df = valid_cts
-                dataset = 'valid'
-            else:
-                test_cts = test_df[test_df['filename'].str.contains('^{}[_-]'.format(patient_id))]
-                if not test_cts.empty:
-                    cts_df = test_cts
-                    dataset = 'test'
-                else:
-                    print('Patient {} not found - skipping'.format(patient_id))
-                    continue
+        regex = '^{}[_-]'.format(patient_id)
+        cts_df, dataset = find_patient_cts(regex)
+        if cts_df is None:
+            regex = '^.+[_-]{}[_-]'.format(patient_id)
+            cts_df, dataset = find_patient_cts(regex)
+            if cts_df is None:
+                print('Patient {} not found - skipping'.format(patient_id))
+                continue
 
         # Obtain the IDs of all the CTs of a certain patient
         unique_cts = set()
         for _, ct in cts_df.iterrows():
-            result = re.search('(^{}[_-])(.+)([_-][0-9]+.png)$'.format(patient_id), ct['filename'])
+            result = re.search('({})(.+)([_-][0-9]+.png)$'.format(regex), ct['filename'])
             if result is None:
                 continue
             unique_cts.add(result.group(2))
@@ -108,7 +114,7 @@ if __name__ == '__main__':
             patient_cts = [cts_df]
         else:
             patient_cts = [
-                cts_df[cts_df['filename'].str.contains('^{}[_-]{}'.format(patient_id, i))]
+                cts_df[cts_df['filename'].str.contains('{}{}'.format(regex, i))]
                 for i in unique_cts
             ]
 
