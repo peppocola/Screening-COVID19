@@ -16,10 +16,10 @@ if __name__ == '__main__':
     train_data, valid_data, test_data = load_datasets()
 
     # Instantiate the model
-    model = CTNet(input_size=16)
+    model = CTNet(base='resnet50')
     print(model)
 
-    batch_size = 8
+    batch_size = 64
 
     train_classifier(
         model, train_data, valid_data,
