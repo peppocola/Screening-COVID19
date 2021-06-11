@@ -13,18 +13,25 @@ class BatchUnflatten(torch.nn.Module):
 
 
 class CTNet(torch.nn.Module):
-    def __init__(self, input_size, hidden_size=128, n_classes=2):
+    def __init__(self, input_size, hidden_size=64, bidirectional=True, dropout=0.2, n_classes=2, pretrained=True):
         super(CTNet, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
+        self.bidirectional = bidirectional
+        self.dropout = dropout
         self.n_classes = n_classes
+        self.lstm_size = input_size * (hidden_size * 2 if bidirectional else hidden_size)
+        self.pretrained = pretrained
 
         self.embeddings_size = 2048
-        self.embeddings = torchvision.models.resnet50(pretrained=False)
+        self.embeddings = torchvision.models.resnet50(pretrained=self.pretrained)
         self.embeddings.fc = BatchUnflatten(self.input_size, self.embeddings_size)
 
-        self.lstm = torch.nn.LSTM(self.embeddings_size, self.hidden_size, batch_first=True)
-        self.fc = torch.nn.Linear(self.input_size * self.hidden_size, self.n_classes)
+        self.lstm = torch.nn.LSTM(
+            self.embeddings_size, self.hidden_size,
+            bidirectional=self.bidirectional, dropout=self.dropout, batch_first=True
+        )
+        self.fc = torch.nn.Linear(self.lstm_size, self.n_classes)
 
     def forward(self, x):
         # [B, L, 224, 224] -> [B * L, 224, 224]
@@ -40,7 +47,7 @@ class CTNet(torch.nn.Module):
         x, _ = self.lstm(x)
 
         # [B, L, H] -> [B, L * H]
-        x = x.reshape([-1, self.input_size * self.hidden_size])
+        x = x.reshape([-1, self.lstm_size])
 
         # [B, L * H] -> [B, C]
         x = self.fc(x)
