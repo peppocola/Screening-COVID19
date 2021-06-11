@@ -27,7 +27,7 @@ class EmbeddingResNet50(torchvision.models.ResNet):
         x = self.layer3(x)
         x = self.layer4(x)
         x = self.avgpool(x)
-        return x.view(-1, self.input_size, self.embeddings_size)
+        return x.view(-1, self.input_size, self.out_features)
 
 
 class CTNet(torch.nn.Module):
