@@ -46,7 +46,7 @@ class CTNet(torch.nn.Module):
         x, _ = self.lstm(x)
 
         # [B, L, H] -> [B, L * H]
-        x = x.reshape([-1, self.lstm_size])
+        x = torch.flatten(x, 1)
 
         # [B, L * H] -> [B, C]
         x = self.fc(x)
