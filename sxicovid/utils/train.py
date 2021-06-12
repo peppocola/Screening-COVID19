@@ -166,6 +166,10 @@ def train_classifier(
         history['validation']['loss'].append(val_loss)
         history['validation']['accuracy'].append(val_accuracy)
 
+        # Check if training should stop according to early stopping
+        early_stopping(val_loss)
+
+        # Save checkpoint
         torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
@@ -174,8 +178,6 @@ def train_classifier(
             'history': history
         }, chkpt_path)
 
-        # Check if training should stop according to early stopping
-        early_stopping(val_loss)
         if early_stopping.should_stop:
             print('Early Stopping... Best Loss: %.4f' % early_stopping.best_loss)
             break
