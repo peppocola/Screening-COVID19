@@ -25,9 +25,9 @@ class CTDataset(torch.utils.data.Dataset):
             transforms.extend([
                 torchvision.transforms.RandomHorizontalFlip(),
                 torchvision.transforms.RandomVerticalFlip(),
-                torchvision.transforms.GaussianBlur(5, sigma=(0.05, 1.0)),
+                torchvision.transforms.GaussianBlur(7, sigma=(0.05, 2.0)),
                 torchvision.transforms.RandomAffine(
-                    degrees=20.0,
+                    degrees=30.0,
                     translate=(0.1, 0.1),
                     scale=(0.9, 1.1),
                     shear=20.0,
@@ -108,7 +108,7 @@ class CTSeqDataset(torch.utils.data.Dataset):
         return self.targets
 
 
-def load_datasets_labels(n_classes=2):
+def load_datasets_labels(path, n_classes=2):
     assert n_classes == 2 or n_classes == 3, 'Whether to use the 3 classes version or not'
 
     # Set the class converter if n_classes == 2
@@ -118,9 +118,9 @@ def load_datasets_labels(n_classes=2):
         converters = {'class': lambda c: int(c)}
 
     # Load the train, validation and test dataframes
-    train_filepath = os.path.join(ROOT_DATAPATH, 'train.csv')
-    valid_filepath = os.path.join(ROOT_DATAPATH, 'valid.csv')
-    test_filepath = os.path.join(ROOT_DATAPATH, 'test.csv')
+    train_filepath = os.path.join(path, 'train.csv')
+    valid_filepath = os.path.join(path, 'valid.csv')
+    test_filepath = os.path.join(path, 'test.csv')
     train_df = pd.read_csv(train_filepath, usecols=['filename', 'class'], converters=converters)
     valid_df = pd.read_csv(valid_filepath, usecols=['filename', 'class'], converters=converters)
     test_df = pd.read_csv(test_filepath, usecols=['filename', 'class'], converters=converters)
@@ -128,7 +128,7 @@ def load_datasets_labels(n_classes=2):
 
 
 def load_datasets(n_classes=2, equalize=False, augment=True):
-    train_df, valid_df, test_df = load_datasets_labels(n_classes=n_classes)
+    train_df, valid_df, test_df = load_datasets_labels(ROOT_DATAPATH, n_classes=n_classes)
 
     # Instantiate the datasets (notice data augmentation on train data)
     train_images_path = os.path.join(ROOT_DATAPATH, 'train')
@@ -141,7 +141,7 @@ def load_datasets(n_classes=2, equalize=False, augment=True):
 
 
 def load_sequence_datasets(n_classes=2, equalize=False, augment=True):
-    train_df, valid_df, test_df = load_datasets_labels(n_classes=n_classes)
+    train_df, valid_df, test_df = load_datasets_labels(ROOT_SEQ_DATAPATH, n_classes=n_classes)
 
     # Instantiate the datasets (notice data augmentation on train data)
     train_images_path = os.path.join(ROOT_SEQ_DATAPATH, 'train')
