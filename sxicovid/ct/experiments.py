@@ -19,7 +19,7 @@ if __name__ == '__main__':
     model = CTNet(base='resnet50')
     print(model)
 
-    batch_size = 64
+    batch_size = 32
 
     train_classifier(
         model, train_data, valid_data,

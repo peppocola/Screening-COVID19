@@ -21,7 +21,9 @@ def train_classifier(
         weight_decay=0.0,
         n_workers=4,
         device=None,
-        verbose=True
+        verbose=True,
+        load_chkpt=False,
+        chkpt_path='checkpoints/last_checkpoint.pt'
 ):
     # Get the device to use
     if device is None:
@@ -61,16 +63,30 @@ def train_classifier(
         lr=lr, weight_decay=weight_decay, **optimizer_kwargs
     )
 
-    # Instantiate the train history
-    history = {
-        'train': {'loss': [], 'accuracy': []},
-        'validation': {'loss': [], 'accuracy': []}
-    }
+    # Initialize the number of epochs
+    i = 0
+
+    # Initialize the history
+    history = {}
 
     # Instantiate the early stopping callback
     early_stopping = EarlyStopping(model, patience=patience)
 
-    for epoch in range(epochs):
+    if load_chkpt:
+        checkpoint = torch.load(chkpt_path)
+        early_stopping.load_state_dict(checkpoint['early_stopping_state_dict'])
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        history = checkpoint['history']
+
+    else:
+        # Instantiate the train history
+        history = {
+            'train': {'loss': [], 'accuracy': []},
+            'validation': {'loss': [], 'accuracy': []}
+        }
+
+    for epoch in range(i, epochs):
         start_time = time.time()
 
         # Initialize the tqdm train data loader, if verbose is enabled
@@ -149,6 +165,14 @@ def train_classifier(
         history['train']['accuracy'].append(train_accuracy)
         history['validation']['loss'].append(val_loss)
         history['validation']['accuracy'].append(val_accuracy)
+
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'early_stopping_state_dict': early_stopping.state_dict(),
+            'history': history
+        }, chkpt_path)
 
         # Check if training should stop according to early stopping
         early_stopping(val_loss)
