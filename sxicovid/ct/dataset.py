@@ -7,6 +7,7 @@ from PIL import Image as pil
 from PIL import ImageOps as pilops
 
 ROOT_DATAPATH = 'datasets/covidx-ct'
+ROOT_SEQ_DATAPATH = 'datasets/covidx-seqct'
 
 
 class CTDataset(torch.utils.data.Dataset):
@@ -141,9 +142,9 @@ def load_sequence_datasets(n_classes=2, equalize=False, augment=True):
     train_df, valid_df, test_df = load_datasets_labels(n_classes=n_classes)
 
     # Instantiate the datasets (notice data augmentation on train data)
-    train_images_path = os.path.join(ROOT_DATAPATH, 'train')
-    valid_images_path = os.path.join(ROOT_DATAPATH, 'valid')
-    test_images_path = os.path.join(ROOT_DATAPATH, 'test')
+    train_images_path = os.path.join(ROOT_SEQ_DATAPATH, 'train')
+    valid_images_path = os.path.join(ROOT_SEQ_DATAPATH, 'valid')
+    test_images_path = os.path.join(ROOT_SEQ_DATAPATH, 'test')
     train_data = CTSeqDataset(train_images_path, train_df, equalize=equalize, augment=augment)
     valid_data = CTSeqDataset(valid_images_path, valid_df, equalize=equalize, augment=False)
     test_data = CTSeqDataset(test_images_path, test_df, equalize=equalize, augment=False)

@@ -83,7 +83,7 @@ class CTSeqNet(torch.nn.Module):
         self.fc = torch.nn.Linear(self.lstm_out_features, self.n_classes)
 
     def forward(self, x):
-        # [B * L, 3, 224, 224] -> [B, L, S]
+        # [B, L, 224, 224] -> [B, L, S]
         x = self.embeddings(x)
 
         # [B, L, S] -> [B, H]
