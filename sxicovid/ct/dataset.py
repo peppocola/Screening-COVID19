@@ -25,10 +25,12 @@ class CTDataset(torch.utils.data.Dataset):
             transforms.extend([
                 torchvision.transforms.RandomHorizontalFlip(),
                 torchvision.transforms.RandomVerticalFlip(),
+                torchvision.transforms.GaussianBlur(5, sigma=(0.05, 1.0)),
                 torchvision.transforms.RandomAffine(
                     degrees=20.0,
                     translate=(0.1, 0.1),
                     scale=(0.9, 1.1),
+                    shear=20.0,
                     interpolation=torchvision.transforms.InterpolationMode.BILINEAR  # use bilinear interpolation
                 )
             ])

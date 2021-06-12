@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
     train_classifier(
         model, train_data, valid_data,
-        lr=1e-3, optimizer='adam', batch_size=batch_size, epochs=100, patience=5, n_workers=2
+        lr=5e-4, optimizer='adam', batch_size=batch_size, epochs=100, patience=5, n_workers=2
     )
 
     report, _ = test_classifier(

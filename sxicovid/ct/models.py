@@ -6,7 +6,7 @@ from torchvision.models.resnet import model_urls
 
 
 class CTNet(torch.nn.Module):
-    def __init__(self, base='alexnet', num_classes=2, pretrained=True):
+    def __init__(self, base, num_classes=2, pretrained=True):
         super(CTNet, self).__init__()
         self.network = CTNet.__build_network(base, num_classes=num_classes, pretrained=pretrained)
 
