@@ -18,6 +18,7 @@ def train_classifier(
         batch_size=128,
         epochs=100,
         patience=5,
+        steps_per_epoch=None,
         weight_decay=0.0,
         n_workers=4,
         device=None,
@@ -63,9 +64,6 @@ def train_classifier(
         lr=lr, weight_decay=weight_decay, **optimizer_kwargs
     )
 
-    # Initialize the number of epochs
-    i = 0
-
     # Instantiate the early stopping callback
     early_stopping = EarlyStopping(model, patience=patience)
 
@@ -75,21 +73,26 @@ def train_classifier(
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         history = checkpoint['history']
+        start_epoch = len(history['train']['loss'])
     else:
-        # Instantiate the train history
         history = {
             'train': {'loss': [], 'accuracy': []},
             'validation': {'loss': [], 'accuracy': []}
         }
+        start_epoch = 0
 
-    for epoch in range(i, epochs):
+    # Compute the steps per epoch, if needed
+    if steps_per_epoch is None:
+        steps_per_epoch = len(train_loader)
+
+    for epoch in range(start_epoch, epochs):
         start_time = time.time()
 
         # Initialize the tqdm train data loader, if verbose is enabled
         if verbose:
             tk_train = tqdm(
-                train_loader, leave=False, bar_format='{l_bar}{bar:32}{r_bar}',
-                desc='Train Epoch %d/%d' % (epoch + 1, epochs)
+                train_loader, total=steps_per_epoch, leave=False,
+                bar_format='{l_bar}{bar:32}{r_bar}', desc='Train Epoch %d/%d' % (epoch + 1, epochs)
             )
         else:
             tk_train = train_loader
@@ -100,7 +103,10 @@ def train_classifier(
         # Training phase
         running_train_loss = RunningAverageMetric(train_loader.batch_size)
         running_train_hits = RunningAverageMetric(train_loader.batch_size)
-        for inputs, targets in tk_train:
+        for i, (inputs, targets) in enumerate(tk_train):
+            if i >= steps_per_epoch:
+                break
+
             inputs, targets = inputs.to(device), targets.to(device)
             optimizer.zero_grad()
             if isinstance(model, CXR2Net) and isinstance(model.network, torch.nn.Sequential) \
