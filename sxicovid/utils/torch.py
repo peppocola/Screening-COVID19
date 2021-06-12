@@ -21,6 +21,10 @@ class EarlyStopping:
         self.counter = 0
         self.best_state = None
 
+    @property
+    def best_found(self):
+        return self.counter == 0 and self.best_loss != np.inf
+
     def __call__(self, loss):
         """
         Call the object.
