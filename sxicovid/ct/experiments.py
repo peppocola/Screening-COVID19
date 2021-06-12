@@ -13,17 +13,17 @@ if __name__ == '__main__':
         os.mkdir(EXPERIMENTS_PATH)
 
     # Load the datasets
-    train_data, valid_data, test_data = load_datasets()
+    train_data, valid_data, test_data = load_datasets(n_classes=3)
 
     # Instantiate the model
-    model = CTNet(base='resnet50')
+    model = CTNet(base='resnet50', n_classes=3)
     print(model)
 
     batch_size = 64
 
     train_classifier(
-        model, train_data, valid_data,
-        lr=5e-4, optimizer='adam', batch_size=batch_size, epochs=100, patience=5, n_workers=2
+        model, train_data, valid_data, chkpt_path='ct-models/ct-resnet50.pt',
+        lr=5e-4, optimizer='adam', batch_size=batch_size, epochs=25, patience=3, n_workers=2
     )
 
     report, _ = test_classifier(
