@@ -5,6 +5,7 @@ datasets
 
 ct-models
 ct-experiments
+ct-checkpoints
 
 cxr2-models
 cxr2-experiments
