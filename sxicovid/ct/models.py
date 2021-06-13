@@ -90,12 +90,22 @@ class EmbeddingResNet50(torchvision.models.ResNet):
 
 
 class CTSeqNet(torch.nn.Module):
-    def __init__(self, input_size, hidden_size=512, bidirectional=True, num_layers=2, n_classes=2, pretrained='imagenet'):
+    def __init__(
+            self,
+            input_size,
+            hidden_size=1024,
+            bidirectional=True,
+            num_layers=2,
+            dropout=0.5,
+            n_classes=2,
+            pretrained='imagenet'
+    ):
         super(CTSeqNet, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.bidirectional = bidirectional
         self.num_layers = num_layers
+        self.dropout = dropout
         self.n_classes = n_classes
         self.pretrained = pretrained
 
@@ -107,10 +117,13 @@ class CTSeqNet(torch.nn.Module):
                 param.requires_grad = False
 
         self.lstm = torch.nn.LSTM(
-            self.embeddings.out_features, self.hidden_size,
+            self.embeddings.out_features, self.hidden_size, dropout=self.dropout,
             num_layers=self.num_layers, bidirectional=self.bidirectional, batch_first=True
         )
-        self.fc = torch.nn.Linear(self.lstm_out_features, self.n_classes)
+        self.fc = torch.nn.Sequential(
+            torch.nn.Dropout(self.dropout),
+            torch.nn.Linear(self.lstm_out_features, self.n_classes)
+        )
 
     def train(self, mode=True):
         self.training = mode
