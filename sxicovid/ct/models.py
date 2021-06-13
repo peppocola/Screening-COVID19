@@ -47,7 +47,7 @@ class EmbeddingResNet50(torchvision.models.ResNet):
 
         # Load the pretrained resnet50
         if pretrained == 'none':
-            state_dict = None
+            pass
         elif pretrained == 'imagenet':
             state_dict = load_state_dict_from_url(model_urls['resnet50'], progress=progress)
             self.load_state_dict(state_dict, strict=True)
@@ -93,7 +93,7 @@ class CTSeqNet(torch.nn.Module):
         self.n_classes = n_classes
         self.pretrained = pretrained
 
-        self.lstm_out_features = num_layers * (hidden_size * 2 if bidirectional else hidden_size)
+        self.lstm_out_features = hidden_size * 2 if bidirectional else hidden_size
         self.embeddings = EmbeddingResNet50(self.input_size, pretrained=self.pretrained)
 
         if self.pretrained == 'covidx-ct':
@@ -119,10 +119,11 @@ class CTSeqNet(torch.nn.Module):
         # [B, L, 224, 224] -> [B, L, S]
         x = self.embeddings(x)
 
-        # [B, L, S] -> [B, H]
-        _, (x, _) = self.lstm(x)
-        x = x.permute(1, 0, 2)
-        x = torch.flatten(x, 1)
+        # [B, L, S] -> [B, L, H]
+        x, _ = self.lstm(x)
+
+        # [B, L, H] -> [B, H]
+        x = torch.mean(x, dim=1)
 
         # [B, H] -> [B, C]
         x = self.fc(x)

@@ -66,20 +66,22 @@ class CTSeqDataset(torch.utils.data.Dataset):
         self.targets = dataframe['class'].to_numpy()
 
         # Initialize data transforms
-        transforms = []
         if augment:
-            transforms.extend([
+            self.transform = torchvision.transforms.Compose([
                 torchvision.transforms.RandomHorizontalFlip(),
                 torchvision.transforms.RandomVerticalFlip(),
+                torchvision.transforms.GaussianBlur(5, sigma=(0.05, 1.0)),
                 torchvision.transforms.RandomAffine(
                     degrees=20.0,
                     translate=(0.1, 0.1),
                     scale=(0.9, 1.1),
+                    shear=None,
                     interpolation=torchvision.transforms.InterpolationMode.BILINEAR  # use bilinear interpolation
-                )
+                ),
+                torchvision.transforms.Normalize((0.5,), (0.5,))  # normalize to (-1, 1)
             ])
-        transforms.append(torchvision.transforms.Normalize((0.5,), (0.5,)))  # normalize to (-1, 1)
-        self.transform = torchvision.transforms.Compose(transforms)
+        else:
+            self.transform = torchvision.transforms.Normalize((0.5,), (0.5,))
         self.to_tensor = torchvision.transforms.ToTensor()
 
     def __len__(self):
@@ -121,9 +123,9 @@ def load_datasets_labels(path, n_classes=2):
     train_filepath = os.path.join(path, 'train.csv')
     valid_filepath = os.path.join(path, 'valid.csv')
     test_filepath = os.path.join(path, 'test.csv')
-    train_df = pd.read_csv(train_filepath, usecols=['filename', 'class'], converters=converters)
-    valid_df = pd.read_csv(valid_filepath, usecols=['filename', 'class'], converters=converters)
-    test_df = pd.read_csv(test_filepath, usecols=['filename', 'class'], converters=converters)
+    train_df = pd.read_csv(train_filepath, converters=converters)
+    valid_df = pd.read_csv(valid_filepath, converters=converters)
+    test_df = pd.read_csv(test_filepath, converters=converters)
     return train_df, valid_df, test_df
 
 
