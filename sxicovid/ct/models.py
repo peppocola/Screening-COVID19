@@ -12,6 +12,12 @@ class CTNet(torch.nn.Module):
         super(CTNet, self).__init__()
         self.network = CTNet.__build_network(base, num_classes=n_classes, pretrained=pretrained)
 
+    def load_state_dict(self, state_dict, strict=True):
+        self.network.load_state_dict(state_dict, strict=strict)
+
+    def state_dict(self, **kwargs):
+        return self.network.state_dict(**kwargs)
+
     def forward(self, x):
         x = torch.cat([x, x, x], dim=1)
         return self.network(x)
@@ -50,10 +56,10 @@ class EmbeddingResNet50(torchvision.models.ResNet):
             pass
         elif pretrained == 'imagenet':
             state_dict = load_state_dict_from_url(model_urls['resnet50'], progress=progress)
-            self.load_state_dict(state_dict, strict=True)
+            self.load_state_dict(state_dict)
         elif pretrained == 'covidx-ct':
             state_dict = torch.load(RESNET50_COVIDX_CT_FILEPATH)
-            self.load_state_dict(state_dict, strict=False)
+            self.load_state_dict(state_dict)
         else:
             raise NotImplementedError('Unknown pretrained value {}'.format(pretrained))
 

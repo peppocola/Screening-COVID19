@@ -43,13 +43,13 @@ class EarlyStopping:
         if self.counter >= self.patience:
             self.should_stop = True
 
-    def load_state_dict(self, state_dict):
+    def load_state_dict(self, state_dict, best_state):
         self.patience = state_dict['patience']
         self.delta = state_dict['delta']
         self.best_loss = state_dict['best_loss']
         self.should_stop = state_dict['should_stop']
         self.counter = state_dict['counter']
-        self.best_state = state_dict['best_state']
+        self.best_state = best_state
 
     def state_dict(self):
         return {
@@ -57,8 +57,7 @@ class EarlyStopping:
             'delta': self.delta,
             'best_loss': self.best_loss,
             'should_stop': self.should_stop,
-            'counter': self.counter,
-            'best_state': self.best_state,
+            'counter': self.counter
         }
 
 

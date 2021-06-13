@@ -70,12 +70,12 @@ class CTSeqDataset(torch.utils.data.Dataset):
             self.transform = torchvision.transforms.Compose([
                 torchvision.transforms.RandomHorizontalFlip(),
                 torchvision.transforms.RandomVerticalFlip(),
-                torchvision.transforms.GaussianBlur(5, sigma=(0.05, 1.0)),
+                torchvision.transforms.GaussianBlur(7, sigma=(0.05, 2.0)),
                 torchvision.transforms.RandomAffine(
-                    degrees=20.0,
+                    degrees=30.0,
                     translate=(0.1, 0.1),
                     scale=(0.9, 1.1),
-                    shear=None,
+                    shear=20.0,
                     interpolation=torchvision.transforms.InterpolationMode.BILINEAR  # use bilinear interpolation
                 ),
                 torchvision.transforms.Normalize((0.5,), (0.5,))  # normalize to (-1, 1)

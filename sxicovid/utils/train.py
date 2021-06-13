@@ -69,9 +69,9 @@ def train_classifier(
 
     if load_chkpt:
         checkpoint = torch.load(chkpt_path)
-        early_stopping.load_state_dict(checkpoint['early_stopping_state_dict'])
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        early_stopping.load_state_dict(checkpoint['early_stopping_state_dict'], model.state_dict())
         history = checkpoint['history']
         start_epoch = len(history['train']['loss'])
     else:

@@ -22,7 +22,7 @@ if __name__ == '__main__':
     batch_size = 64
 
     train_classifier(
-        model, train_data, valid_data, chkpt_path='ct-models/ct-resnet50.pt',
+        model, train_data, valid_data, chkpt_path='ct-checkpoints/ct-resnet50.pt',
         lr=1e-3, optimizer='adam', batch_size=batch_size, epochs=100, patience=10,
         steps_per_epoch=500, n_workers=2
     )
