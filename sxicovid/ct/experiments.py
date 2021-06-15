@@ -19,7 +19,7 @@ if __name__ == '__main__':
     model = CTNet(num_classes=3)
     print(model)
 
-    batch_size = 1
+    batch_size = 64
 
     train_classifier(
         model, train_data, valid_data, chkpt_path='ct-checkpoints/ct-resnet50.pt',
