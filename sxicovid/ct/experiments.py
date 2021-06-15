@@ -13,13 +13,13 @@ if __name__ == '__main__':
         os.mkdir(EXPERIMENTS_PATH)
 
     # Load the datasets
-    train_data, valid_data, test_data = load_datasets(n_classes=3)
+    train_data, valid_data, test_data = load_datasets(num_classes=3)
 
     # Instantiate the model
-    model = CTNet(base='resnet50', n_classes=3)
+    model = CTNet(num_classes=3)
     print(model)
 
-    batch_size = 64
+    batch_size = 1
 
     train_classifier(
         model, train_data, valid_data, chkpt_path='ct-checkpoints/ct-resnet50.pt',

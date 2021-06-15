@@ -129,8 +129,8 @@ def load_datasets_labels(path, n_classes=2):
     return train_df, valid_df, test_df
 
 
-def load_datasets(n_classes=2, equalize=False, augment=True):
-    train_df, valid_df, test_df = load_datasets_labels(ROOT_DATAPATH, n_classes=n_classes)
+def load_datasets(num_classes=2, equalize=False, augment=True):
+    train_df, valid_df, test_df = load_datasets_labels(ROOT_DATAPATH, n_classes=num_classes)
 
     # Instantiate the datasets (notice data augmentation on train data)
     train_images_path = os.path.join(ROOT_DATAPATH, 'train')

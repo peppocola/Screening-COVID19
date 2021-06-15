@@ -4,42 +4,71 @@ import torchvision
 from torch.hub import load_state_dict_from_url
 from torchvision.models.resnet import model_urls
 
+from sxicovid.ct.layers import Projector, LinearAttention
+
 RESNET50_COVIDX_CT_FILEPATH = 'ct-models/ct-resnet50.pt'
 
 
-class CTNet(torch.nn.Module):
-    def __init__(self, base, n_classes=2, pretrained=True):
-        super(CTNet, self).__init__()
-        self.network = CTNet.__build_network(base, num_classes=n_classes, pretrained=pretrained)
+class CTNet(torchvision.models.ResNet):
+    def __init__(self, num_classes=2, pretrained=True):
+        super(CTNet, self).__init__(
+            block=torchvision.models.resnet.Bottleneck, layers=[3, 4, 6, 3]
+        )
 
-    def load_state_dict(self, state_dict, strict=True):
-        self.network.load_state_dict(state_dict, strict=strict)
+        # Check if use pretrained ResNet50 model (on ImageNet)
+        if pretrained:
+            state_dict = load_state_dict_from_url(model_urls['resnet50'], progress=True)
+            self.load_state_dict(state_dict)
 
-    def state_dict(self, **kwargs):
-        return self.network.state_dict(**kwargs)
+        # Initialize the projector
+        self.projector = Projector(1024, 2048)
 
-    def forward(self, x):
+        # Initialize the linear attentions
+        self.attention1 = LinearAttention(2048)
+        self.attention2 = LinearAttention(2048)
+
+        # Re-instantiate the fully connected layer
+        del self.fc
+        self.fc = torch.nn.Linear(4096, num_classes)
+
+    def _forward_impl(self, x, attention=False):
+        # ResNet50 requires 3-channels input
         x = torch.cat([x, x, x], dim=1)
-        return self.network(x)
 
-    @staticmethod
-    def __build_network(base, num_classes=1000, pretrained=True):
-        if base == 'resnet50':
-            network = torchvision.models.resnet50(pretrained=pretrained)
-            network.fc = torch.nn.Linear(2048, num_classes)
-        elif base == 'densenet121':
-            network = torchvision.models.densenet121(pretrained=pretrained)
-            network.classifier = torch.nn.Linear(1024, num_classes)
-        elif base == 'inceptionv3':
-            network = torch.nn.Sequential(
-                torch.nn.Upsample(size=(299, 299), mode='bilinear', align_corners=True),
-                torchvision.models.inception_v3(
-                    pretrained=False, num_classes=num_classes, aux_logits=True, init_weights=True
-                )
-            )
-        else:
-            raise NotImplementedError('Unknown base model {}'.format(base))
-        return network
+        # Forward through the input convolution
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+
+        # Forward through the first two ResNet50 layers
+        x = self.layer1(x)
+        x = self.layer2(x)
+
+        # Forward through the last two ResNet50 layers to get local feature tensors
+        l1 = self.layer3(x)
+        l2 = self.layer4(l1)
+
+        # Forward through the average pooling to get global feature vectors
+        g = self.avgpool(l2)
+
+        # Forward through the attention layers (note the dimensionality projection on l1)
+        c1, g1 = self.attention1(self.projector(l1), g)
+        c2, g2 = self.attention2(l2, g)
+
+        # Concatenate the weighted and normalized compatibility scores
+        x = torch.cat([g1, g2], dim=1)
+
+        # Pass through the linear classifier
+        x = self.fc(x)
+
+        # Return the attention map, optionally
+        if attention:
+            return x, torch.sigmoid(c1), torch.sigmoid(c2)
+        return x
+
+    def forward(self, x, attention=False):
+        return self._forward_impl(x, attention=attention)
 
 
 class EmbeddingResNet50(torchvision.models.ResNet):
