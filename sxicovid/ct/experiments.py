@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
     train_classifier(
         model, train_data, valid_data, chkpt_path='ct-checkpoints/ct-resnet50.pt',
-        lr=1e-3, optimizer='adam', batch_size=batch_size, epochs=100, patience=10,
+        lr=5e-4, optimizer='adam', batch_size=batch_size, epochs=100, patience=10,
         steps_per_epoch=600, n_workers=2
     )
 
