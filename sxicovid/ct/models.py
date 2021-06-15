@@ -20,8 +20,9 @@ class CTNet(torchvision.models.ResNet):
             state_dict = load_state_dict_from_url(model_urls['resnet50'], progress=True)
             self.load_state_dict(state_dict)
 
-        # Initialize the projector
-        self.projector = Projector(1024, 2048)
+        # Initialize the projectors
+        self.projector1 = Projector(512, 2048)
+        self.projector2 = Projector(1024, 2048)
 
         # Initialize the linear attentions
         self.attention1 = LinearAttention(2048)
@@ -41,20 +42,22 @@ class CTNet(torchvision.models.ResNet):
         x = self.relu(x)
         x = self.maxpool(x)
 
-        # Forward through the first two ResNet50 layers
+        # Forward through the first ResNet50 layer
         x = self.layer1(x)
-        x = self.layer2(x)
 
-        # Forward through the last two ResNet50 layers to get local feature tensors
-        l1 = self.layer3(x)
-        l2 = self.layer4(l1)
+        # Forward through the innermost two ResNet50 layers to get local feature tensors
+        l1 = self.layer2(x)
+        l2 = self.layer3(l1)
+
+        # Forward through the last ResNet50 layer
+        x = self.layer4(l2)
 
         # Forward through the average pooling to get global feature vectors
-        g = self.avgpool(l2)
+        g = self.avgpool(x)
 
-        # Forward through the attention layers (note the dimensionality projection on l1)
-        c1, g1 = self.attention1(self.projector(l1), g)
-        c2, g2 = self.attention2(l2, g)
+        # Forward through the attention layers (note the dimensionality projections)
+        c1, g1 = self.attention1(self.projector1(l1), g)
+        c2, g2 = self.attention2(self.projector2(l2), g)
 
         # Concatenate the weighted and normalized compatibility scores
         x = torch.cat([g1, g2], dim=1)
