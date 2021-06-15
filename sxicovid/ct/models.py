@@ -6,14 +6,15 @@ from torchvision.models.resnet import model_urls
 
 from sxicovid.ct.layers import Projector, LinearAttention
 
-RESNET50_COVIDX_CT_FILEPATH = 'ct-models/ct-resnet50.pt'
-
 
 class CTNet(torchvision.models.ResNet):
-    def __init__(self, num_classes=2, pretrained=True):
+    def __init__(self, num_classes=2, embeddings=False, pretrained=True):
         super(CTNet, self).__init__(
             block=torchvision.models.resnet.Bottleneck, layers=[3, 4, 6, 3]
         )
+        self.num_classes = num_classes
+        self.embeddings = embeddings
+        self.out_features = 4096
 
         # Check if use pretrained ResNet50 model (on ImageNet)
         if pretrained:
@@ -30,7 +31,8 @@ class CTNet(torchvision.models.ResNet):
 
         # Re-instantiate the fully connected layer
         del self.fc
-        self.fc = torch.nn.Linear(4096, num_classes)
+        if not self.embeddings:
+            self.fc = torch.nn.Linear(self.out_features, self.num_classes)
 
     def _forward_impl(self, x, attention=False):
         # ResNet50 requires 3-channels input
@@ -62,8 +64,9 @@ class CTNet(torchvision.models.ResNet):
         # Concatenate the weighted and normalized compatibility scores
         x = torch.cat([g1, g2], dim=1)
 
-        # Pass through the linear classifier
-        x = self.fc(x)
+        # Pass through the linear classifier, if specified
+        if not self.embeddings:
+            x = self.fc(x)
 
         # Return the attention map, optionally
         if attention:
@@ -74,54 +77,9 @@ class CTNet(torchvision.models.ResNet):
         return self._forward_impl(x, attention=attention)
 
 
-class EmbeddingResNet50(torchvision.models.ResNet):
-    def __init__(self, input_size, pretrained='imagenet', progress=True):
-        num_classes = 3 if pretrained == 'covidx-ct' else 1000
-        super(EmbeddingResNet50, self).__init__(
-            torchvision.models.resnet.Bottleneck, [3, 4, 6, 3], num_classes=num_classes
-        )
-        self.input_size = input_size
-        self.out_features = 2048
-
-        # Load the pretrained resnet50
-        if pretrained == 'none':
-            pass
-        elif pretrained == 'imagenet':
-            state_dict = load_state_dict_from_url(model_urls['resnet50'], progress=progress)
-            self.load_state_dict(state_dict)
-        elif pretrained == 'covidx-ct':
-            state_dict = torch.load(RESNET50_COVIDX_CT_FILEPATH)
-            self.load_state_dict(state_dict)
-        else:
-            raise NotImplementedError('Unknown pretrained value {}'.format(pretrained))
-
-        # Delete the fully connected layer
-        del self.fc
-
-    def forward(self, x):
-        # [B, L, 224, 224] -> [B * L, 224, 224]
-        x = x.view(-1, 224, 224)
-
-        # [B * L, 3, 224, 224]
-        x = torch.stack([x, x, x], dim=1)
-
-        # Apply ResNet features extractor
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.maxpool(x)
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
-        x = self.avgpool(x)
-
-        # [B * L, 2048] -> [B, L, 2048]
-        x = x.view(-1, self.input_size, self.out_features)
-        return x
-
-
 class CTSeqNet(torch.nn.Module):
+    CT_RESNET50_ATT2_EMBEDDINGS = 'ct-models/ct-resnet50-att2.pt'
+
     def __init__(
             self,
             input_size,
@@ -129,8 +87,8 @@ class CTSeqNet(torch.nn.Module):
             bidirectional=True,
             num_layers=2,
             dropout=0.5,
-            n_classes=2,
-            pretrained='imagenet'
+            num_classes=2,
+            load_embeddings=False
     ):
         super(CTSeqNet, self).__init__()
         self.input_size = input_size
@@ -138,28 +96,35 @@ class CTSeqNet(torch.nn.Module):
         self.bidirectional = bidirectional
         self.num_layers = num_layers
         self.dropout = dropout
-        self.n_classes = n_classes
-        self.pretrained = pretrained
+        self.num_classes = num_classes
+        self.load_embeddings = load_embeddings
+        self.out_features = hidden_size * 2 if bidirectional else hidden_size
 
-        self.lstm_out_features = hidden_size * 2 if bidirectional else hidden_size
-        self.embeddings = EmbeddingResNet50(self.input_size, pretrained=self.pretrained)
-
-        if self.pretrained == 'covidx-ct':
+        # Instantiate the image embeddings model
+        if self.load_embeddings:
+            self.embeddings = CTNet(embeddings=True, pretrained=False)
+            state_dict = torch.load(self.CT_RESNET50_ATT2_EMBEDDINGS)
+            self.embeddings.load_state_dict(state_dict, strict=False)
             for param in self.embeddings.parameters():
                 param.requires_grad = False
+        else:
+            self.embeddings = CTNet(embeddings=True, pretrained=True)
 
+        # Instantiate the LSTM model
         self.lstm = torch.nn.LSTM(
             self.embeddings.out_features, self.hidden_size, dropout=self.dropout,
             num_layers=self.num_layers, bidirectional=self.bidirectional, batch_first=True
         )
+
+        # Instantiate the FC model with a dropout layer
         self.fc = torch.nn.Sequential(
             torch.nn.Dropout(self.dropout),
-            torch.nn.Linear(self.lstm_out_features, self.n_classes)
+            torch.nn.Linear(self.out_features, self.num_classes)
         )
 
     def train(self, mode=True):
         self.training = mode
-        self.embeddings.train(mode and self.pretrained != 'covidx-ct')
+        self.embeddings.train(mode and not self.load_embeddings)
         self.lstm.train(mode)
         self.fc.train(mode)
 
@@ -167,10 +132,16 @@ class CTSeqNet(torch.nn.Module):
         self.train(False)
 
     def forward(self, x):
-        # [B, L, 224, 224] -> [B, L, S]
+        # [B, L, 224, 224] -> [B * L, 1, 224, 224]
+        x = x.view(-1, 1, 224, 224)
+
+        # [B * L, 1, 224, 224] -> [B * L, 4096]
         x = self.embeddings(x)
 
-        # [B, L, S] -> [B, L, H]
+        # [B * L, 4096] -> [B, L, 4096]
+        x = x.view(-1, self.input_size, self.embeddings.out_features)
+
+        # [B, L, 4096] -> [B, L, H]
         x, _ = self.lstm(x)
 
         # [B, L, H] -> [B, H]

@@ -1,17 +1,10 @@
-import os
-
 from sxicovid.ct.models import CTNet
 from sxicovid.ct.dataset import load_datasets
 from sxicovid.utils.train import train_classifier
 from sxicovid.utils.evaluate import test_classifier
 
-EXPERIMENTS_PATH = 'ct-experiments'
-
 
 if __name__ == '__main__':
-    if not os.path.isdir(EXPERIMENTS_PATH):
-        os.mkdir(EXPERIMENTS_PATH)
-
     # Load the datasets
     train_data, valid_data, test_data = load_datasets(num_classes=3)
 
@@ -22,7 +15,7 @@ if __name__ == '__main__':
     batch_size = 64
 
     train_classifier(
-        model, train_data, valid_data, chkpt_path='ct-checkpoints/ct-resnet50.pt',
+        model, train_data, valid_data, chkpt_path='ct-checkpoints/ct-resnet50-att2.pt',
         lr=5e-4, optimizer='adam', batch_size=batch_size, epochs=100, patience=10,
         steps_per_epoch=600, n_workers=2
     )
