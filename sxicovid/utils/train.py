@@ -127,6 +127,10 @@ def train_classifier(
                 hits = torch.eq(predictions, targets).sum()
                 running_train_hits(hits.item())
 
+        # Close the tqdm train bar
+        if verbose:
+            tk_train.close()
+
         # Initialize the tqdm validation data loader, if verbose is specified
         if verbose:
             tk_val = tqdm(
