@@ -126,6 +126,7 @@ class CTSeqNet(torch.nn.Module):
         self.embeddings.train(mode and not self.load_embeddings)
         self.lstm.train(mode)
         self.fc.train(mode)
+        self.attention.train(mode)
 
     def forward(self, x, attention=False):
         # Squeeze along the batch size
