@@ -33,4 +33,4 @@ class LinearAttention(torch.nn.Module):
         a = torch.softmax(c.view(b, 1, -1), dim=2).view(b, 1, h, w)
         g = torch.mul(a.expand_as(x), x)
         g = g.view(b, f, -1).sum(dim=2)
-        return c, g
+        return a, g

@@ -58,8 +58,8 @@ class CTNet(torchvision.models.ResNet):
         g = self.avgpool(x)
 
         # Forward through the attention layers (note the dimensionality projections)
-        c1, g1 = self.attention1(self.projector1(l1), g)
-        c2, g2 = self.attention2(self.projector2(l2), g)
+        a1, g1 = self.attention1(self.projector1(l1), g)
+        a2, g2 = self.attention2(self.projector2(l2), g)
 
         # Concatenate the weighted and normalized compatibility scores
         x = torch.cat([g1, g2], dim=1)
@@ -70,7 +70,7 @@ class CTNet(torchvision.models.ResNet):
 
         # Return the attention map, optionally
         if attention:
-            return x, torch.sigmoid(c1), torch.sigmoid(c2)
+            return x, a1, a2
         return x
 
     def forward(self, x, attention=False):
