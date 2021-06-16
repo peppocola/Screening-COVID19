@@ -37,10 +37,7 @@ def plot_cxr2_errors(dataset, errors, model_name):
         plt.close()
 
 
-def save_attention_map(filename, img, att1, att2):
-    path = 'ct-attentions/' + filename + '.png'
-    image_size = (224, 224)
-
+def save_attention_map(filepath, img, att1, att2):
     # Remove batch dimension
     img = torch.squeeze(img)
     att1 = torch.squeeze(att1)
@@ -51,30 +48,29 @@ def save_attention_map(filename, img, att1, att2):
     att1 = att1.cpu().data.numpy()
     att2 = att2.cpu().data.numpy()
 
-    # Normalize attention map
+    # Un-normalize attention map
     att1 = att1 * (1 / att1.max()) * 255
     att2 = att2 * (1 / att2.max()) * 255
-
-    # Upsample the image
-    att1 = cv2.resize(att1, image_size, interpolation=cv2.INTER_CUBIC)
-    att2 = cv2.resize(att2, image_size, interpolation=cv2.INTER_CUBIC)
-
-    # Thresholding
-    _, att1 = cv2.threshold(att1, 32, 255, type=cv2.THRESH_TOZERO)
-    _, att2 = cv2.threshold(att2, 128, 255, type=cv2.THRESH_TOZERO)
-
+    img = np.expand_dims(img, 2) * 255
     att1 = att1.astype(np.uint8)
     att2 = att2.astype(np.uint8)
+    img = img.astype(np.uint8)
+
+    # Thresholding
+    _, att1 = cv2.threshold(att1, 192, 255, type=cv2.THRESH_TOZERO)
+    _, att2 = cv2.threshold(att2, 128, 255, type=cv2.THRESH_TOZERO)
+
+    # Upsample the image
+    att1 = cv2.resize(att1, img.shape[:2], interpolation=cv2.INTER_CUBIC)
+    att2 = cv2.resize(att2, img.shape[:2], interpolation=cv2.INTER_CUBIC)
 
     # Apply colormap
     att1 = cv2.applyColorMap(att1, cv2.COLORMAP_JET)
     att2 = cv2.applyColorMap(att2, cv2.COLORMAP_JET)
-
-    img = np.expand_dims(img, 2) * 255
 
     # Combine heatmap and image
     heatmap = 0.6 * img + 0.2 * att1 + 0.2 * att2
     heatmap = heatmap.astype(np.uint8)
 
     # Save image
-    cv2.imwrite(path, heatmap)
+    cv2.imwrite(filepath, heatmap)
