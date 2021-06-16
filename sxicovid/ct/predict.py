@@ -53,5 +53,5 @@ if __name__ == '__main__':
     metrics = {'report': report,
                'confusion_matrix': cm.tolist()}
 
-    with open(os.path.join(MODELS_PATH, MODEL_NAME) + '.json', 'w') as file:
+    with open(os.path.join(MODELS_PATH, MODEL_NAME) + '-report.json', 'w') as file:
         json.dump(metrics, file, indent=4)
