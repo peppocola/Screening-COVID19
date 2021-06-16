@@ -1,7 +1,6 @@
 import json
 import os
 import torch
-import numpy as np
 
 from sklearn import metrics
 from sxicovid.ct.dataset import load_sequence_datasets
@@ -15,7 +14,7 @@ if __name__ == '__main__':
     _, _, test_data = load_sequence_datasets(num_classes=3)
 
     # Instantiate the model and load from folder
-    model = CTSeqNet(input_size=32, num_classes=3)
+    model = CTSeqNet(input_size=16, num_classes=3)
     state_filepath = os.path.join(MODELS_PATH, MODEL_NAME + '.pt')
     model.load_state_dict(torch.load(state_filepath))
 

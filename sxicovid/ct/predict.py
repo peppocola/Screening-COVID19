@@ -1,8 +1,8 @@
 import json
 import os
 import torch
-from sklearn import metrics
 
+from sklearn import metrics
 from sxicovid.ct.dataset import load_datasets
 from sxicovid.ct.models import CTNet
 from sxicovid.utils.plot import save_attention_map

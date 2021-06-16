@@ -10,8 +10,8 @@ from PIL import Image as pil
 
 if __name__ == '__main__':
     # Usage example:
-    #   python sxicovid/ct/preprocessing.py /hdd/Datasets/covidx-ct/train_COVIDx_CT-2A.txt /hdd/Datasets/covidx-ct/val_COVIDx_CT-2A.txt \
-    #       /hdd/Datasets/covidx-ct/test_COVIDx_CT-2A.txt --src-path /hdd/Datasets/covidx-ct/2A_images --size 224 224 --ct-length 32 --dest-path datasets/covidx-seqct
+    #   python sxicovid/ct/seq_preprocessing.py /hdd/Datasets/covidx-ct/train_COVIDx_CT-2A.txt /hdd/Datasets/covidx-ct/val_COVIDx_CT-2A.txt \
+    #       /hdd/Datasets/covidx-ct/test_COVIDx_CT-2A.txt --src-path /hdd/Datasets/covidx-ct/2A_images --size 224 224 --ct-length 16 --dest-path datasets/covidx-seqct
 
     # Instantiate the command line arguments parser
     parser = argparse.ArgumentParser(description='CT Image dataset preprocessor')
@@ -31,7 +31,7 @@ if __name__ == '__main__':
         '--size', nargs=2, type=int, default=(224, 224), help='The size of the output images.'
     )
     parser.add_argument(
-        '--ct-length', type=int, default=32, help='The fixed length of a CT scan.'
+        '--ct-length', type=int, default=16, help='The fixed length of a CT scan.'
     )
     parser.add_argument(
         '--dest-path', type=str, default='.', help='The output dataset path.'
