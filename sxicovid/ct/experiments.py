@@ -1,7 +1,6 @@
 from sxicovid.ct.models import CTNet
 from sxicovid.ct.dataset import load_datasets
 from sxicovid.utils.train import train_classifier
-from sxicovid.utils.evaluate import test_classifier
 
 
 if __name__ == '__main__':
@@ -19,9 +18,3 @@ if __name__ == '__main__':
         lr=5e-4, optimizer='adam', batch_size=batch_size, epochs=100, patience=10,
         steps_per_epoch=600, n_workers=2
     )
-
-    report, _ = test_classifier(
-        model, test_data, batch_size=batch_size, n_workers=2
-    )
-
-    print(report)

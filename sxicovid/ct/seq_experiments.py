@@ -1,7 +1,6 @@
 from sxicovid.ct.models import CTSeqNet
 from sxicovid.ct.dataset import load_sequence_datasets
 from sxicovid.utils.train import train_classifier
-from sxicovid.utils.evaluate import test_classifier
 
 
 if __name__ == '__main__':
@@ -15,12 +14,7 @@ if __name__ == '__main__':
     batch_size = 8
 
     train_classifier(
-        model, train_data, valid_data, chkpt_path='ct-checkpoints/ct-resnet50-lstm.pt',
+        model, train_data, valid_data, chkpt_path='ct-checkpoints/ct-resnet50-lstm-att2.pt',
         lr=1e-4, optimizer='adam', batch_size=batch_size, epochs=25, patience=5, n_workers=2
     )
 
-    report, _ = test_classifier(
-        model, test_data, batch_size=batch_size, n_workers=2
-    )
-
-    print(report)
