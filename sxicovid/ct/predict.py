@@ -11,7 +11,6 @@ from sxicovid.utils.plot import save_attention_map
 
 MODELS_PATH = 'ct-models'
 MODEL_NAME = 'ct-resnet50-att2'
-NET_SIZE = (224, 224)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -36,23 +35,23 @@ if __name__ == '__main__':
     # Make the prediction
     y_pred = []
     y_true = []
-    for idx, (example, label) in enumerate(test_data):
-        example = example.unsqueeze(0)
-        example = example.to(device)
-        pred, map1, map2 = model.forward(example, attention=True)
-        pred = torch.log_softmax(pred, dim=1)
-        pred = torch.argmax(pred, dim=1).item()
-        y_pred.append(pred)
-        y_true.append(label)
-        if idx < 1000:
-            example = (example + 1) / 2
-            save_attention_map(str(idx), example, map1, map2)
+    with torch.no_grad():
+        for idx, (example, label) in enumerate(test_data):
+            example = example.unsqueeze(0)
+            example = example.to(device)
+            pred, map1, map2 = model(example, attention=True)
+            pred = torch.log_softmax(pred, dim=1)
+            pred = torch.argmax(pred, dim=1).item()
+            y_pred.append(pred)
+            y_true.append(label)
+            if idx < 1000:
+                example = (example + 1) / 2
+                save_attention_map(str(idx), example, map1, map2)
 
-    report = classification_report(y_true, y_pred, labels=[0,1,2], output_dict=True)
+    report = classification_report(y_true, y_pred, output_dict=True)
     cm = metrics.confusion_matrix(y_true, y_pred)
     metrics = {'report': report,
-               'confusion matrix': cm.tolist()}
+               'confusion_matrix': cm.tolist()}
 
     with open(os.path.join(MODELS_PATH, MODEL_NAME) + '.json', 'w') as file:
         json.dump(metrics, file, indent=4)
-
