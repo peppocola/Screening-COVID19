@@ -147,10 +147,9 @@ class CTSeqNet(torch.nn.Module):
         # Pass through the LSTM module
         # [B, L, 4096] -> [B, L, H]
         x, _ = self.lstm(x)
-        g = x[:, -1]
 
         # Pass through the attention module
-        a, g = self.attention(x.permute(0, 2, 1), g.unsqueeze(2))
+        a, g = self.attention(x)
 
         # Pass through the linear classifier
         # [B, H] -> [B, C]

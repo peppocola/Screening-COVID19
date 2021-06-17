@@ -18,19 +18,19 @@ class Projector(torch.nn.Module):
 
 class LinearAttention1d(torch.nn.Module):
     """
-    Linear attention based on parametrized compatibility score function with softmax normalization.
+    Linear attention with softmax normalization.
     """
     def __init__(self, in_features):
         super(LinearAttention1d, self).__init__()
-        self.score = torch.nn.Conv1d(
-            in_channels=in_features, out_channels=1,
-            kernel_size=(1,), padding=(0,), bias=False
+        self.score = torch.nn.Linear(
+            in_features=in_features, out_features=1, bias=False
         )
 
-    def forward(self, x, g):
-        c = self.score(x + g)
-        a = torch.softmax(c, dim=2)
-        g = torch.mul(a.expand_as(x), x)
+    def forward(self, x):
+        c = self.score(x)
+        c = c.squeeze(2)
+        a = torch.softmax(c, dim=1)
+        g = torch.mul(a, x)
         g = g.sum(dim=2)
         return a, g
 
