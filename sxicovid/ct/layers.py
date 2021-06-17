@@ -22,17 +22,22 @@ class LinearAttention1d(torch.nn.Module):
     """
     def __init__(self, in_features):
         super(LinearAttention1d, self).__init__()
+        self.gate1 = torch.nn.Linear(
+            in_features=in_features, out_features=in_features, bias=True
+        )
+        self.gate2 = torch.nn.Linear(
+            in_features=in_features, out_features=in_features, bias=True
+        )
         self.score = torch.nn.Linear(
-            in_features=in_features, out_features=1, bias=False
+            in_features=in_features, out_features=1, bias=True
         )
 
-    def forward(self, x):
-        c = self.score(x)
-        c = c.squeeze(2)
+    def forward(self, x, g):
+        g = g.unsqueeze(1)
+        c = self.score(torch.tanh(self.gate1(x) + self.gate2(g)))
         a = torch.softmax(c, dim=1)
-        g = torch.mul(a, x)
-        g = g.sum(dim=2)
-        return a, g
+        g = torch.sum(a * x, dim=1)
+        return a.squeeze(2), g
 
 
 class LinearAttention2d(torch.nn.Module):
