@@ -69,11 +69,11 @@ def train_classifier(
 
     if load_chkpt:
         checkpoint = torch.load(chkpt_path)
-        model.load_state_dict(checkpoint['model_state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        early_stopping.load_state_dict(checkpoint['early_stopping_state_dict'], model.state_dict())
         history = checkpoint['history']
-        start_epoch = len(history['train']['loss'])
+        start_epoch = checkpoint['epoch']
+        model.load_state_dict(checkpoint['model'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        early_stopping.load_state_dict(checkpoint['early_stopping'])
     else:
         history = {
             'train': {'loss': [], 'accuracy': []},
@@ -175,15 +175,14 @@ def train_classifier(
         # Check if training should stop according to early stopping
         early_stopping(val_loss)
 
-        # Save the checkpoint, if found a better validation loss
-        if early_stopping.best_found:
-            torch.save({
-                'epoch': epoch,
-                'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
-                'early_stopping_state_dict': early_stopping.state_dict(),
-                'history': history
-            }, chkpt_path)
+        # Save the checkpoint
+        torch.save({
+            'epoch': epoch,
+            'model': model.state_dict(),
+            'optimizer': optimizer.state_dict(),
+            'early_stopping': early_stopping.state_dict(),
+            'history': history
+        }, chkpt_path)
 
         if early_stopping.should_stop:
             print('Early Stopping... Best Loss: %.4f' % early_stopping.best_loss)

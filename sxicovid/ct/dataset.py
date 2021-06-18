@@ -110,8 +110,8 @@ class CTSeqDataset(torch.utils.data.Dataset):
         return self.targets
 
 
-def load_datasets_labels(path, num_classes=2):
-    assert num_classes == 2 or num_classes == 3, 'Whether to use the 3 classes version or not'
+def load_datasets_labels(path, num_classes=3):
+    assert num_classes == 2 or num_classes == 3
 
     # Set the class converter if n_classes == 2
     if num_classes == 2:
@@ -129,7 +129,7 @@ def load_datasets_labels(path, num_classes=2):
     return train_df, valid_df, test_df
 
 
-def load_datasets(num_classes=2, equalize=False, augment=True):
+def load_datasets(num_classes=3, equalize=False, augment=True):
     train_df, valid_df, test_df = load_datasets_labels(ROOT_DATAPATH, num_classes=num_classes)
 
     # Instantiate the datasets (notice data augmentation on train data)
@@ -142,7 +142,7 @@ def load_datasets(num_classes=2, equalize=False, augment=True):
     return train_data, valid_data, test_data
 
 
-def load_sequence_datasets(num_classes=2, equalize=False, augment=True):
+def load_sequence_datasets(num_classes=3, equalize=False, augment=True):
     train_df, valid_df, test_df = load_datasets_labels(ROOT_SEQ_DATAPATH, num_classes=num_classes)
 
     # Instantiate the datasets (notice data augmentation on train data)

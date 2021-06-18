@@ -3,8 +3,6 @@ import torchvision
 
 from torch.hub import load_state_dict_from_url
 from torchvision.models.resnet import model_urls
-
-from sxicovid.ct.layers import Projector
 from sxicovid.ct.layers import LinearAttention1d, LinearAttention2d
 
 
@@ -15,20 +13,16 @@ class CTNet(torchvision.models.ResNet):
         )
         self.num_classes = num_classes
         self.embeddings = embeddings
-        self.out_features = 4096
+        self.out_features = 1536
 
         # Check if use pretrained ResNet50 model (on ImageNet)
         if pretrained:
             state_dict = load_state_dict_from_url(model_urls['resnet50'], progress=True)
             self.load_state_dict(state_dict)
 
-        # Initialize the projectors
-        self.projector1 = Projector(512, 2048)
-        self.projector2 = Projector(1024, 2048)
-
         # Initialize the linear attentions
-        self.attention1 = LinearAttention2d(2048)
-        self.attention2 = LinearAttention2d(2048)
+        self.attention1 = LinearAttention2d(2048, 512)
+        self.attention2 = LinearAttention2d(2048, 1024)
 
         # Re-instantiate the fully connected layer
         del self.fc
@@ -58,9 +52,9 @@ class CTNet(torchvision.models.ResNet):
         # Forward through the average pooling to get global feature vectors
         g = self.avgpool(x)
 
-        # Forward through the attention layers (note the dimensionality projections)
-        a1, g1 = self.attention1(self.projector1(l1), g)
-        a2, g2 = self.attention2(self.projector2(l2), g)
+        # Forward through the attention layers
+        a1, g1 = self.attention1(l1, g)
+        a2, g2 = self.attention2(l2, g)
 
         # Concatenate the weighted and normalized compatibility scores
         x = torch.cat([g1, g2], dim=1)
