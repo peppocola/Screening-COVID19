@@ -78,7 +78,7 @@ class CTSeqNet(torch.nn.Module):
     def __init__(
             self,
             input_size,
-            hidden_size=512,
+            hidden_size=128,
             bidirectional=True,
             num_layers=2,
             num_classes=2,
