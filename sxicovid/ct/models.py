@@ -93,9 +93,8 @@ class CTSeqNet(torch.nn.Module):
     def __init__(
             self,
             input_size,
-            hidden_size=128,
+            hidden_size=256,
             bidirectional=True,
-            num_layers=2,
             num_classes=2,
             load_embeddings=False
     ):
@@ -103,7 +102,6 @@ class CTSeqNet(torch.nn.Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.bidirectional = bidirectional
-        self.num_layers = num_layers
         self.num_classes = num_classes
         self.load_embeddings = load_embeddings
         self.out_features = hidden_size * 2 if bidirectional else hidden_size
@@ -118,10 +116,14 @@ class CTSeqNet(torch.nn.Module):
         else:
             self.embeddings = CTNet(embeddings=True, pretrained=True)
 
-        # Instantiate the LSTM model
-        self.lstm = torch.nn.LSTM(
+        # Instantiate the LSTM models
+        self.lstm1 = torch.nn.LSTM(
             self.embeddings.out_features, self.hidden_size,
-            num_layers=self.num_layers, bidirectional=self.bidirectional, batch_first=True
+            bidirectional=self.bidirectional, batch_first=True
+        )
+        self.lstm2 = torch.nn.LSTM(
+            self.out_features, self.hidden_size,
+            bidirectional=self.bidirectional, batch_first=True
         )
 
         # Instantiate the FC model
@@ -133,7 +135,8 @@ class CTSeqNet(torch.nn.Module):
     def train(self, mode=True):
         self.training = mode
         self.embeddings.train(mode and not self.load_embeddings)
-        self.lstm.train(mode)
+        self.lstm1.train(mode)
+        self.lstm2.train(mode)
         self.fc.train(mode)
         self.attention.train(mode)
 
@@ -143,23 +146,26 @@ class CTSeqNet(torch.nn.Module):
         x = x.view(-1, 1, 224, 224)
 
         # Obtain the embeddings and the related attention maps, if specified
-        # [B * L, 1, 224, 224] -> [B * L, 4096]
+        # [B * L, 1, 224, 224] -> [B * L, 3072]
         if attention:
             x, e1, e2 = self.embeddings(x, attention=True)
         else:
             x = self.embeddings(x, attention=False)
 
         # Un-squeeze along the batch size
-        # [B * L, 4096] -> [B, L, 4096]
+        # [B * L, 3072] -> [B, L, 3072]
         x = x.view(-1, self.input_size, self.embeddings.out_features)
 
-        # Pass through the LSTM module
-        # [B, L, 4096] -> [B, L, H]
-        x, _ = self.lstm(x)
-        g = x[:, -1]
+        # Pass through the first LSTM module
+        # [B, L, 3072] -> [B, L, H]
+        l1, _ = self.lstm1(x)
+
+        # Pass through the second LSTM module
+        g, _ = self.lstm2(l1)
+        g = g[:, -1]
 
         # Pass through the attention module
-        a, g = self.attention(x, g)
+        a, g = self.attention(l1, g)
 
         # Pass through the linear classifier
         # [B, H] -> [B, C]
