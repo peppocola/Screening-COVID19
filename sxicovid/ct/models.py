@@ -13,16 +13,30 @@ class CTNet(torchvision.models.ResNet):
         )
         self.num_classes = num_classes
         self.embeddings = embeddings
-        self.out_features = 1536
+        self.out_features = 3072
 
         # Check if use pretrained ResNet50 model (on ImageNet)
         if pretrained:
             state_dict = load_state_dict_from_url(model_urls['resnet50'], progress=True)
             self.load_state_dict(state_dict)
 
+        # Introduce other bottleneck blocks
+        self.layer5 = self._make_layer(
+            block=torchvision.models.resnet.Bottleneck,
+            planes=512, blocks=3, stride=1
+        )
+
         # Initialize the linear attentions
-        self.attention1 = LinearAttention2d(2048, 512)
-        self.attention2 = LinearAttention2d(2048, 1024)
+        self.attention1 = LinearAttention2d(2048, 1024)
+        self.attention2 = LinearAttention2d(2048, 2048)
+
+        # Initialize the last bottleneck blocks
+        for m in self.layer5.modules():
+            if isinstance(m, torch.nn.Conv2d):
+                torch.nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+            elif isinstance(m, torch.nn.BatchNorm2d):
+                torch.nn.init.constant_(m.weight, 1)
+                torch.nn.init.constant_(m.bias, 0)
 
         # Re-instantiate the fully connected layer
         del self.fc
@@ -39,15 +53,16 @@ class CTNet(torchvision.models.ResNet):
         x = self.relu(x)
         x = self.maxpool(x)
 
-        # Forward through the first ResNet50 layer
+        # Forward through the first two ResNet50 layer
         x = self.layer1(x)
+        x = self.layer2(x)
 
         # Forward through the innermost two ResNet50 layers to get local feature tensors
-        l1 = self.layer2(x)
-        l2 = self.layer3(l1)
+        l1 = self.layer3(x)
+        l2 = self.layer4(l1)
 
-        # Forward through the last ResNet50 layer
-        x = self.layer4(l2)
+        # Forward through the last layer
+        x = self.layer5(l2)
 
         # Forward through the average pooling to get global feature vectors
         g = self.avgpool(x)

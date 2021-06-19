@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import cv2
+import torchvision.utils
 
 MISS_IMAGES_PATH = 'misses'
 
@@ -38,39 +39,39 @@ def plot_cxr2_errors(dataset, errors, model_name):
 
 
 def save_attention_map(filepath, img, att1, att2):
-    # Remove batch dimension
-    img = torch.squeeze(img)
-    att1 = torch.squeeze(att1)
-    att2 = torch.squeeze(att2)
+    # Move on CPU
+    img = img.cpu()
+    att1 = att1.cpu()
+    att2 = att2.cpu()
 
-    # Convert to numpy array
-    img = img.cpu().data.numpy()
-    att1 = att1.cpu().data.numpy()
-    att2 = att2.cpu().data.numpy()
+    # Un-normalize attention maps
+    att1 = (att1 - att1.min()) / (att1.max() - att1.min()) * 255
+    att2 = (att2 - att2.min()) / (att2.max() - att2.min()) * 255
+    img = img * 255.0
 
-    # Un-normalize attention map
-    att1 = att1 * (1 / att1.max()) * 255
-    att2 = att2 * (1 / att2.max()) * 255
-    img = np.expand_dims(img, 2) * 255
-    att1 = att1.astype(np.uint8)
-    att2 = att2.astype(np.uint8)
-    img = img.astype(np.uint8)
+    # Upsample attention maps
+    att1 = torch.nn.functional.interpolate(att1, scale_factor=(8, 8), mode='bilinear', align_corners=True)
+    att2 = torch.nn.functional.interpolate(att2, scale_factor=(16, 16), mode='bilinear', align_corners=True)
 
-    # Thresholding
-    _, att1 = cv2.threshold(att1, 192, 255, type=cv2.THRESH_TOZERO)
-    _, att2 = cv2.threshold(att2, 128, 255, type=cv2.THRESH_TOZERO)
-
-    # Upsample the image
-    att1 = cv2.resize(att1, img.shape[:2], interpolation=cv2.INTER_CUBIC)
-    att2 = cv2.resize(att2, img.shape[:2], interpolation=cv2.INTER_CUBIC)
+    # Conver to Numpy arrays
+    att1 = att1.squeeze(0).permute(1, 2, 0).numpy().astype(np.uint8)
+    att2 = att2.squeeze(0).permute(1, 2, 0).numpy().astype(np.uint8)
+    img = img.squeeze(0).permute(1, 2, 0).numpy().astype(np.uint8)
 
     # Apply colormap
     att1 = cv2.applyColorMap(att1, cv2.COLORMAP_JET)
     att2 = cv2.applyColorMap(att2, cv2.COLORMAP_JET)
 
-    # Combine heatmap and image
-    heatmap = 0.6 * img + 0.2 * att1 + 0.2 * att2
-    heatmap = heatmap.astype(np.uint8)
+    # Combine heatmaps
+    img = np.repeat(img, repeats=3, axis=2)
+    img_att1 = cv2.addWeighted(img, 0.7, att1, 0.3, 0.0)
+    img_att2 = cv2.addWeighted(img, 0.7, att2, 0.3, 0.0)
+    img_att1 = cv2.cvtColor(img_att1, cv2.COLOR_BGR2RGB)
+    img_att2 = cv2.cvtColor(img_att2, cv2.COLOR_BGR2RGB)
 
-    # Save image
-    cv2.imwrite(filepath, heatmap)
+    # Plot the image and heatmaps
+    img = torch.tensor(img).permute(2, 0, 1) / 255.0
+    img_att1 = torch.tensor(img_att1).permute(2, 0, 1) / 255.0
+    img_att2 = torch.tensor(img_att2).permute(2, 0, 1) / 255.0
+    img_grid = torch.stack([img, img_att1, img_att2])
+    torchvision.utils.save_image(img_grid, filepath, padding=0, nrow=3)
