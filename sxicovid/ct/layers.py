@@ -35,10 +35,13 @@ class LinearAttention2d(torch.nn.Module):
         super(LinearAttention2d, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.proj = torch.nn.Conv2d(
-            in_channels=self.in_features, out_channels=self.out_features,
-            kernel_size=(1, 1), padding=(0, 0), bias=False
-        )
+        if self.in_features != self.out_features:
+            self.proj = torch.nn.Conv2d(
+                in_channels=self.in_features, out_channels=self.out_features,
+                kernel_size=(1, 1), padding=(0, 0), bias=False
+            )
+        else:
+            self.proj = None
         self.score = torch.nn.Conv2d(
             in_channels=self.out_features, out_channels=1,
             kernel_size=(1, 1), padding=(0, 0), bias=False
@@ -46,7 +49,9 @@ class LinearAttention2d(torch.nn.Module):
 
     def forward(self, x, g):
         b, _, h, w = x.size()
-        c = self.score(x + self.proj(g))
+        if self.proj is not None:
+            g = self.proj(g)
+        c = self.score(x + g)
         a = torch.softmax(c.view(b, 1, -1), dim=2).view(b, 1, h, w)
         g = torch.mul(a.expand_as(x), x)
         g = g.view(b, self.out_features, -1).sum(dim=2)

@@ -50,8 +50,8 @@ def save_attention_map(filepath, img, att1, att2):
     img = img * 255.0
 
     # Upsample attention maps
-    att1 = torch.nn.functional.interpolate(att1, scale_factor=(8, 8), mode='bilinear', align_corners=True)
-    att2 = torch.nn.functional.interpolate(att2, scale_factor=(16, 16), mode='bilinear', align_corners=True)
+    att1 = torch.nn.functional.interpolate(att1, scale_factor=(16, 16), mode='bilinear', align_corners=True)
+    att2 = torch.nn.functional.interpolate(att2, scale_factor=(32, 32), mode='bilinear', align_corners=True)
 
     # Conver to Numpy arrays
     att1 = att1.squeeze(0).permute(1, 2, 0).numpy().astype(np.uint8)
