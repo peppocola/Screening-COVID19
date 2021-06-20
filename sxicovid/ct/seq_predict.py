@@ -40,11 +40,11 @@ if __name__ == '__main__':
             pred = torch.argmax(pred, dim=1).item()
             y_pred.append(pred)
             y_true.append(label)
-            if idx < 100:
-                example = (example + 1) / 2
-                mr_idx = torch.argmax(seqs, dim=1).item()
-                filepath = os.path.join('ct-attentions-seq', '{}.png'.format(idx))
-                save_attention_map(filepath, example[:, mr_idx], map1[:, mr_idx], map2[:, mr_idx])
+
+            rel_idx = torch.argmax(seqs, dim=1).item()
+            example = (example + 1) / 2
+            filepath = os.path.join('ct-attentions-seq', '{}.png'.format(idx))
+            save_attention_map(filepath, example[:, [rel_idx]], map1[:, [rel_idx]], map2[:, [rel_idx]])
 
     report = metrics.classification_report(y_true, y_pred, output_dict=True)
     cm = metrics.confusion_matrix(y_true, y_pred)

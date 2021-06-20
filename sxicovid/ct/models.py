@@ -126,7 +126,7 @@ class CTSeqNet(torch.nn.Module):
         self.fc = torch.nn.Linear(self.out_features, self.num_classes)
 
         # Instantiate the attention module
-        self.attention = LinearAttention1d(self.out_features)
+        self.attention = LinearAttention1d(self.out_features, self.out_features)
 
     def train(self, mode=True):
         self.training = mode
