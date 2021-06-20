@@ -93,7 +93,7 @@ class CTSeqNet(torch.nn.Module):
     def __init__(
             self,
             input_size,
-            hidden_size=256,
+            hidden_size=128,
             bidirectional=True,
             num_classes=2,
             load_embeddings=False
@@ -116,13 +116,9 @@ class CTSeqNet(torch.nn.Module):
         else:
             self.embeddings = CTNet(embeddings=True, pretrained=True)
 
-        # Instantiate the LSTM models
-        self.lstm1 = torch.nn.LSTM(
+        # Instantiate the LSTM module
+        self.lstm = torch.nn.LSTM(
             self.embeddings.out_features, self.hidden_size,
-            bidirectional=self.bidirectional, batch_first=True
-        )
-        self.lstm2 = torch.nn.LSTM(
-            self.out_features, self.hidden_size,
             bidirectional=self.bidirectional, batch_first=True
         )
 
@@ -135,8 +131,7 @@ class CTSeqNet(torch.nn.Module):
     def train(self, mode=True):
         self.training = mode
         self.embeddings.train(mode and not self.load_embeddings)
-        self.lstm1.train(mode)
-        self.lstm2.train(mode)
+        self.lstm.train(mode)
         self.fc.train(mode)
         self.attention.train(mode)
 
@@ -156,13 +151,10 @@ class CTSeqNet(torch.nn.Module):
         # [B * L, 3072] -> [B, L, 3072]
         x = x.view(-1, self.input_size, self.embeddings.out_features)
 
-        # Pass through the first LSTM module
+        # Pass through the LSTM module
         # [B, L, 3072] -> [B, L, H]
-        l1, _ = self.lstm1(x)
-
-        # Pass through the second LSTM module
-        g, _ = self.lstm2(l1)
-        g = g[:, -1]
+        l1, _ = self.lstm(x)
+        g = l1[:, -1]
 
         # Pass through the attention module
         a, g = self.attention(l1, g)
