@@ -42,7 +42,7 @@ if __name__ == '__main__':
             y_true.append(label)
             if idx < 250:
                 example = (example + 1) / 2
-                filepath = os.path.join('ct-attentions', '{}.png'.format(idx))
+                filepath = os.path.join('visualization/ct-attentions', '{}.png'.format(idx))
                 save_attention_map(filepath, example, map1, map2)
 
     report = metrics.classification_report(y_true, y_pred, output_dict=True)

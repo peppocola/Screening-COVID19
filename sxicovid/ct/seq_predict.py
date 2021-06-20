@@ -5,7 +5,7 @@ import torch
 from sklearn import metrics
 from sxicovid.ct.dataset import load_sequence_datasets
 from sxicovid.ct.models import CTSeqNet
-from sxicovid.utils.plot import save_attention_map
+from sxicovid.utils.plot import save_attention_map_sequence
 
 MODELS_PATH = 'ct-models'
 MODEL_NAME = 'ct-resnet50-lstm-att2'
@@ -40,11 +40,10 @@ if __name__ == '__main__':
             pred = torch.argmax(pred, dim=1).item()
             y_pred.append(pred)
             y_true.append(label)
-
-            rel_idx = torch.argmax(seqs, dim=1).item()
-            example = (example + 1) / 2
-            filepath = os.path.join('ct-attentions-seq', '{}.png'.format(idx))
-            save_attention_map(filepath, example[:, [rel_idx]], map1[:, [rel_idx]], map2[:, [rel_idx]])
+            if idx < 100:
+                example = (example + 1) / 2
+                filepath = os.path.join('visualization/ct-attentions-seq', '{}.png'.format(idx))
+                save_attention_map_sequence(filepath, example, map1, map2, seqs)
 
     report = metrics.classification_report(y_true, y_pred, output_dict=True)
     cm = metrics.confusion_matrix(y_true, y_pred)

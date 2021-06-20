@@ -75,3 +75,73 @@ def save_attention_map(filepath, img, att1, att2):
     img_att2 = torch.tensor(img_att2).permute(2, 0, 1) / 255.0
     img_grid = torch.stack([img, img_att1, img_att2])
     torchvision.utils.save_image(img_grid, filepath, padding=0, nrow=3)
+
+
+def save_attention_map_sequence(filepath, img, att1, att2, seqs):
+    # Move on CPU
+    img = img.cpu()
+    att1 = att1.cpu()
+    att2 = att2.cpu()
+    seqs = seqs.cpu()
+
+    # Un-normalize attention maps
+    att1 = (att1 - att1.min()) / (att1.max() - att1.min()) * 255
+    att2 = (att2 - att2.min()) / (att2.max() - att2.min()) * 255
+    seqs = (seqs - seqs.min()) / (seqs.max() - seqs.min()) * 255
+    img = img * 255.0
+
+    # Upsample attention maps
+    att1 = torch.nn.functional.interpolate(att1, scale_factor=(16, 16), mode='bilinear', align_corners=True)
+    att2 = torch.nn.functional.interpolate(att2, scale_factor=(32, 32), mode='bilinear', align_corners=True)
+
+    # Conver to Numpy arrays
+    att1 = att1.squeeze(0).numpy().astype(np.uint8)
+    att2 = att2.squeeze(0).numpy().astype(np.uint8)
+    seqs = seqs.squeeze(0).numpy().astype(np.uint8)
+    img = img.squeeze(0).numpy().astype(np.uint8)
+    img = np.expand_dims(img, axis=3)
+    img = np.repeat(img, repeats=3, axis=3)
+    n, h, w, c = img.shape
+
+    # Apply colormap
+    att1 = np.array([cv2.applyColorMap(np.expand_dims(a, axis=2), cv2.COLORMAP_JET) for a in att1])
+    att2 = np.array([cv2.applyColorMap(np.expand_dims(a, axis=2), cv2.COLORMAP_JET) for a in att2])
+
+    # Combine heatmaps
+    img_att1 = np.array([cv2.addWeighted(i, 0.7, a, 0.3, 0.0) for i, a in zip(img, att1)])
+    img_att2 = np.array([cv2.addWeighted(i, 0.7, a, 0.3, 0.0) for i, a in zip(img, att2)])
+
+    # Convert from BGR to RGB
+    img_att1 = np.array([cv2.cvtColor(a, cv2.COLOR_BGR2RGB) for a in img_att1])
+    img_att2 = np.array([cv2.cvtColor(a, cv2.COLOR_BGR2RGB) for a in img_att2])
+
+    # Draw red lines based on the relevance of each image in the sequence
+    img_att1 = np.array([
+        cv2.line(cv2.line(a, (0, 0), (w, 0), (s, 0, 0, s), 3), (0, h), (w, h), (s, 0, 0), 3)
+        for a, s in zip(img_att1, seqs.tolist())
+    ])
+    img_att2 = np.array([
+        cv2.line(
+            cv2.line(cv2.line(a, (0, 0), (w, 0), (s, 0, 0), 3), (0, h), (w, h), (s, 0, 0), 3),
+            (w, 0), (w, h), (s, 0, 0), 5
+        )
+        for a, s in zip(img_att2, seqs.tolist())
+    ])
+    img = np.array([
+        cv2.line(
+            cv2.line(cv2.line(i, (0, 0), (w, 0), (s, 0, 0), 3), (0, h), (w, h), (s, 0, 0), 3),
+            (0, 0), (0, h), (s, 0, 0), 5
+        )
+        for i, s in zip(img, seqs.tolist())
+    ])
+
+    # Convert again to tensors
+    img = torch.tensor(img).permute(0, 3, 1, 2) / 255.0
+    img_att1 = torch.tensor(img_att1).permute(0, 3, 1, 2) / 255.0
+    img_att2 = torch.tensor(img_att2).permute(0, 3, 1, 2) / 255.0
+    n, c, h, w = img.shape
+
+    # Plot the image and heatmaps in a grid
+    img_grid = torch.cat([img, img_att1, img_att2], dim=0)
+    img_grid = img_grid.reshape(3, n, c, h, w).transpose(1, 0).reshape(n * 3, c, h, w)
+    torchvision.utils.save_image(img_grid, filepath, padding=0, nrow=3)
