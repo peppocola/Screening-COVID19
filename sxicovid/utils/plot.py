@@ -53,7 +53,7 @@ def save_attention_map(filepath, img, att1, att2):
     att1 = torch.nn.functional.interpolate(att1, scale_factor=(16, 16), mode='bilinear', align_corners=True)
     att2 = torch.nn.functional.interpolate(att2, scale_factor=(32, 32), mode='bilinear', align_corners=True)
 
-    # Conver to Numpy arrays
+    # Convert to Numpy arrays
     att1 = att1.squeeze(0).permute(1, 2, 0).numpy().astype(np.uint8)
     att2 = att2.squeeze(0).permute(1, 2, 0).numpy().astype(np.uint8)
     img = img.squeeze(0).permute(1, 2, 0).numpy().astype(np.uint8)
@@ -85,8 +85,8 @@ def save_attention_map_sequence(filepath, img, att1, att2, seqs):
     seqs = seqs.cpu()
 
     # Un-normalize attention maps
-    att1 = (att1 - att1.min()) / (att1.max() - att1.min()) * 255
-    att2 = (att2 - att2.min()) / (att2.max() - att2.min()) * 255
+    att1 = torch.stack([(a - a.min()) / (a.max() - a.min()) for a in att1[0]]).unsqueeze(0) * 255
+    att2 = torch.stack([(a - a.min()) / (a.max() - a.min()) for a in att2[0]]).unsqueeze(0) * 255
     seqs = (seqs - seqs.min()) / (seqs.max() - seqs.min()) * 255
     img = img * 255.0
 
