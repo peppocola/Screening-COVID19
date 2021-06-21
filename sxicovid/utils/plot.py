@@ -74,7 +74,7 @@ def save_attention_map(filepath, img, att1, att2):
     img_att1 = torch.tensor(img_att1).permute(2, 0, 1) / 255.0
     img_att2 = torch.tensor(img_att2).permute(2, 0, 1) / 255.0
     img_grid = torch.stack([img, img_att1, img_att2])
-    torchvision.utils.save_image(img_grid, filepath, padding=0, nrow=3)
+    torchvision.utils.save_image(img_grid, filepath, padding=8, nrow=3, pad_value=0)
 
 
 def save_attention_map_sequence(filepath, img, att1, att2, seqs):
@@ -117,21 +117,15 @@ def save_attention_map_sequence(filepath, img, att1, att2, seqs):
 
     # Draw red lines based on the relevance of each image in the sequence
     img_att1 = np.array([
-        cv2.line(cv2.line(a, (0, 0), (w, 0), (s, 0, 0, s), 3), (0, h), (w, h), (s, 0, 0), 3)
+        cv2.rectangle(a, (0, 0), (w - 1, h - 1), (s, 0, 0), 5)
         for a, s in zip(img_att1, seqs.tolist())
     ])
     img_att2 = np.array([
-        cv2.line(
-            cv2.line(cv2.line(a, (0, 0), (w, 0), (s, 0, 0), 3), (0, h), (w, h), (s, 0, 0), 3),
-            (w, 0), (w, h), (s, 0, 0), 5
-        )
+        cv2.rectangle(a, (0, 0), (w - 1, h - 1), (s, 0, 0), 5)
         for a, s in zip(img_att2, seqs.tolist())
     ])
     img = np.array([
-        cv2.line(
-            cv2.line(cv2.line(i, (0, 0), (w, 0), (s, 0, 0), 3), (0, h), (w, h), (s, 0, 0), 3),
-            (0, 0), (0, h), (s, 0, 0), 5
-        )
+        cv2.rectangle(i, (0, 0), (w - 1, h - 1), (s, 0, 0), 5)
         for i, s in zip(img, seqs.tolist())
     ])
 
@@ -144,4 +138,4 @@ def save_attention_map_sequence(filepath, img, att1, att2, seqs):
     # Plot the image and heatmaps in a grid
     img_grid = torch.cat([img, img_att1, img_att2], dim=0)
     img_grid = img_grid.reshape(3, n, c, h, w).transpose(1, 0).reshape(n * 3, c, h, w)
-    torchvision.utils.save_image(img_grid, filepath, padding=0, nrow=3)
+    torchvision.utils.save_image(img_grid, filepath, padding=8, nrow=3, pad_value=0)
