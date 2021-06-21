@@ -38,6 +38,47 @@ def plot_cxr2_errors(dataset, errors, model_name):
         plt.close()
 
 
+def save_binary_attention_map(filepath, img, att1, att2):
+    # Move on CPU
+    img = img.cpu()
+    att1 = att1.cpu()
+    att2 = att2.cpu()
+
+    # Un-normalize attention maps
+    img = img * 255.0
+
+    # Upsample attention maps
+    att1 = torch.nn.functional.interpolate(att1, scale_factor=(16, 16), mode='bilinear', align_corners=True)
+    att2 = torch.nn.functional.interpolate(att2, scale_factor=(32, 32), mode='bilinear', align_corners=True)
+
+    # Combine attention maps
+    att = torch.sqrt(att1 * att2)
+    att = (att - att.min()) / (att.max() - att.min())
+    att = 255.0 * att
+
+    # Convert to Numpy arrays
+    att = att.squeeze(0).permute(1, 2, 0).numpy().astype(np.uint8)
+    img = img.squeeze(0).permute(1, 2, 0).numpy().astype(np.uint8)
+
+    # Apply OTZU Method
+    _, att = cv2.threshold(att, 0, 255, type=cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    # Apply red colormap
+    tmp = np.zeros((att.shape[0], att.shape[1], 3), dtype=np.uint8)
+    tmp[:, :, 0] = att
+    att = tmp
+
+    # Combine heatmaps
+    img = np.repeat(img, repeats=3, axis=2)
+    img_att = cv2.addWeighted(img, 0.7, att, 0.3, 0.0)
+
+    # Plot the image and heatmaps
+    img = torch.tensor(img).permute(2, 0, 1) / 255.0
+    img_att = torch.tensor(img_att).permute(2, 0, 1) / 255.0
+    img_grid = torch.stack([img, img_att])
+    torchvision.utils.save_image(img_grid, filepath, padding=8, nrow=2, pad_value=0)
+
+
 def save_attention_map(filepath, img, att1, att2):
     # Move on CPU
     img = img.cpu()
