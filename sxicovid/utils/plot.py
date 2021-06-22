@@ -44,9 +44,6 @@ def save_binary_attention_map(filepath, img, att1, att2):
     att1 = att1.cpu()
     att2 = att2.cpu()
 
-    # Un-normalize attention maps
-    img = img * 255.0
-
     # Upsample attention maps
     att1 = torch.nn.functional.interpolate(att1, scale_factor=(16, 16), mode='bilinear', align_corners=True)
     att2 = torch.nn.functional.interpolate(att2, scale_factor=(32, 32), mode='bilinear', align_corners=True)
@@ -57,6 +54,7 @@ def save_binary_attention_map(filepath, img, att1, att2):
     att = 255.0 * att
 
     # Convert to Numpy arrays
+    img = 255.0 * img
     att = att.squeeze(0).permute(1, 2, 0).numpy().astype(np.uint8)
     img = img.squeeze(0).permute(1, 2, 0).numpy().astype(np.uint8)
 
@@ -68,7 +66,7 @@ def save_binary_attention_map(filepath, img, att1, att2):
     tmp[:, :, 0] = att
     att = tmp
 
-    # Combine heatmaps
+    # Combine heatmap and image
     img = np.repeat(img, repeats=3, axis=2)
     img_att = cv2.addWeighted(img, 0.7, att, 0.3, 0.0)
 
@@ -76,7 +74,7 @@ def save_binary_attention_map(filepath, img, att1, att2):
     img = torch.tensor(img).permute(2, 0, 1) / 255.0
     img_att = torch.tensor(img_att).permute(2, 0, 1) / 255.0
     img_grid = torch.stack([img, img_att])
-    torchvision.utils.save_image(img_grid, filepath, padding=8, nrow=2, pad_value=0)
+    torchvision.utils.save_image(img_grid, filepath, padding=4, nrow=2, pad_value=0)
 
 
 def save_attention_map(filepath, img, att1, att2):
@@ -115,7 +113,7 @@ def save_attention_map(filepath, img, att1, att2):
     img_att1 = torch.tensor(img_att1).permute(2, 0, 1) / 255.0
     img_att2 = torch.tensor(img_att2).permute(2, 0, 1) / 255.0
     img_grid = torch.stack([img, img_att1, img_att2])
-    torchvision.utils.save_image(img_grid, filepath, padding=8, nrow=3, pad_value=0)
+    torchvision.utils.save_image(img_grid, filepath, padding=4, nrow=3, pad_value=0)
 
 
 def save_attention_map_sequence(filepath, img, att1, att2, seqs):
@@ -126,23 +124,25 @@ def save_attention_map_sequence(filepath, img, att1, att2, seqs):
     seqs = seqs.cpu()
 
     # Un-normalize attention maps
-    att1 = torch.stack([(a - a.min()) / (a.max() - a.min()) for a in att1[0]]).unsqueeze(0) * 255
-    att2 = torch.stack([(a - a.min()) / (a.max() - a.min()) for a in att2[0]]).unsqueeze(0) * 255
-    seqs = (seqs - seqs.min()) / (seqs.max() - seqs.min()) * 255
+    att1 = torch.stack([(a - a.min()) / (a.max() - a.min()) for a in att1[0]]).unsqueeze(0)
+    att2 = torch.stack([(a - a.min()) / (a.max() - a.min()) for a in att2[0]]).unsqueeze(0)
+    seqs = (seqs - seqs.min()) / (seqs.max() - seqs.min())
     img = img * 255.0
 
     # Upsample attention maps
     att1 = torch.nn.functional.interpolate(att1, scale_factor=(16, 16), mode='bilinear', align_corners=True)
     att2 = torch.nn.functional.interpolate(att2, scale_factor=(32, 32), mode='bilinear', align_corners=True)
 
+    # Weight attention maps according to sequence's attentions
+    att1 = 255.0 * torch.sqrt(att1 * seqs.unsqueeze(2).unsqueeze(3))
+    att2 = 255.0 * torch.sqrt(att2 * seqs.unsqueeze(2).unsqueeze(3))
+
     # Conver to Numpy arrays
     att1 = att1.squeeze(0).numpy().astype(np.uint8)
     att2 = att2.squeeze(0).numpy().astype(np.uint8)
-    seqs = seqs.squeeze(0).numpy().astype(np.uint8)
     img = img.squeeze(0).numpy().astype(np.uint8)
     img = np.expand_dims(img, axis=3)
     img = np.repeat(img, repeats=3, axis=3)
-    n, h, w, c = img.shape
 
     # Apply colormap
     att1 = np.array([cv2.applyColorMap(np.expand_dims(a, axis=2), cv2.COLORMAP_JET) for a in att1])
@@ -156,20 +156,6 @@ def save_attention_map_sequence(filepath, img, att1, att2, seqs):
     img_att1 = np.array([cv2.cvtColor(a, cv2.COLOR_BGR2RGB) for a in img_att1])
     img_att2 = np.array([cv2.cvtColor(a, cv2.COLOR_BGR2RGB) for a in img_att2])
 
-    # Draw red lines based on the relevance of each image in the sequence
-    img_att1 = np.array([
-        cv2.rectangle(a, (0, 0), (w - 1, h - 1), (s, 0, 0), 5)
-        for a, s in zip(img_att1, seqs.tolist())
-    ])
-    img_att2 = np.array([
-        cv2.rectangle(a, (0, 0), (w - 1, h - 1), (s, 0, 0), 5)
-        for a, s in zip(img_att2, seqs.tolist())
-    ])
-    img = np.array([
-        cv2.rectangle(i, (0, 0), (w - 1, h - 1), (s, 0, 0), 5)
-        for i, s in zip(img, seqs.tolist())
-    ])
-
     # Convert again to tensors
     img = torch.tensor(img).permute(0, 3, 1, 2) / 255.0
     img_att1 = torch.tensor(img_att1).permute(0, 3, 1, 2) / 255.0
@@ -179,4 +165,4 @@ def save_attention_map_sequence(filepath, img, att1, att2, seqs):
     # Plot the image and heatmaps in a grid
     img_grid = torch.cat([img, img_att1, img_att2], dim=0)
     img_grid = img_grid.reshape(3, n, c, h, w).transpose(1, 0).reshape(n * 3, c, h, w)
-    torchvision.utils.save_image(img_grid, filepath, padding=8, nrow=3, pad_value=0)
+    torchvision.utils.save_image(img_grid, filepath, padding=4, nrow=3, pad_value=0)
