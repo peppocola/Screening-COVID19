@@ -123,19 +123,19 @@ class CTSeqNet(torch.nn.Module):
         )
 
         # Instantiate the global feature vector linear transformation
-        self.cv = torch.nn.Linear(self.out_features, self.out_features)
+        self.gv = torch.nn.Linear(self.out_features, self.out_features)
 
         # Instantiate the attention module
         self.attention = LinearAttention1d(self.out_features, self.out_features)
 
         # Instantiate the FC model
-        self.fc = torch.nn.Linear(self.out_features * 2, self.num_classes)
+        self.fc = torch.nn.Linear(self.out_features, self.num_classes)
 
     def train(self, mode=True):
         self.training = mode
         self.embeddings.train(mode and not self.load_embeddings)
         self.lstm.train(mode)
-        self.cv.train(mode)
+        self.gv.train(mode)
         self.attention.train(mode)
         self.fc.train(mode)
 
@@ -160,17 +160,14 @@ class CTSeqNet(torch.nn.Module):
         l1, _ = self.lstm(x)
 
         # Compute the global feature vector
-        g1 = torch.sigmoid(self.cv(l1[:, -1]))
+        g1 = torch.tanh(self.gv(l1[:, -1]))
 
         # Pass through the attention module and obtain the context vector
         a, g = self.attention(l1, g1)
 
-        # Concatenate the global feature vector and the context vector
-        x = torch.tanh(torch.cat([g, g1], dim=1))
-
         # Pass through the linear classifier
-        # [B, H * 2] -> [B, C]
-        x = self.fc(x)
+        # [B, H] -> [B, C]
+        x = self.fc(g)
         if attention:
             # Un-squeeze the attention maps along the batch size
             e1h, e1w = e1.shape[2], e1.shape[3]

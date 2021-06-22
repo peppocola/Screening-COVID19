@@ -14,6 +14,6 @@ if __name__ == '__main__':
     # Train the classifier
     train_classifier(
         model, train_data, valid_data, chkpt_path='ct-checkpoints/ct-resnet50-lstm-att2.pt',
-        lr=1e-4, optimizer='adam', batch_size=8, epochs=25, patience=5, weight_decay=5e-3,
+        lr=1e-4, optimizer='adam', batch_size=16, epochs=50, patience=10, weight_decay=5e-3,
         n_workers=2
     )
