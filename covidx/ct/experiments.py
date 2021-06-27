@@ -1,6 +1,6 @@
-from sxicovid.ct.models import CTNet
-from sxicovid.ct.dataset import load_datasets
-from sxicovid.utils.train import train_classifier
+from covidx.ct.models import CTNet
+from covidx.ct.dataset import load_datasets
+from covidx.utils.train import train_classifier
 
 
 if __name__ == '__main__':

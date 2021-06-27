@@ -4,9 +4,9 @@ import torch
 from tqdm import tqdm
 from PIL import Image as pil
 
-from sxicovid.cxr2.metrics import load_model
-from sxicovid.cxr2.dataset import load_competition_dataset
-from sxicovid.cxr2.preprocessing import image_preprocess
+from covidx.cxr2.metrics import load_model
+from covidx.cxr2.dataset import load_competition_dataset
+from covidx.cxr2.preprocessing import image_preprocess
 
 
 COMPETITION_IMAGES_PATH = '/hdd/Datasets/covidx-cxr2/competition_test'

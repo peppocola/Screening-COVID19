@@ -10,7 +10,7 @@ from PIL import Image as pil
 
 if __name__ == '__main__':
     # Usage example:
-    #   python sxicovid/ct/seq_preprocessing.py /hdd/Datasets/covidx-ct/train_COVIDx_CT-2A.txt /hdd/Datasets/covidx-ct/val_COVIDx_CT-2A.txt \
+    #   python covidx/ct/seq_preprocessing.py /hdd/Datasets/covidx-ct/train_COVIDx_CT-2A.txt /hdd/Datasets/covidx-ct/val_COVIDx_CT-2A.txt \
     #       /hdd/Datasets/covidx-ct/test_COVIDx_CT-2A.txt --src-path /hdd/Datasets/covidx-ct/2A_images --size 224 224 --ct-length 16 --dest-path datasets/covidx-seqct
 
     # Instantiate the command line arguments parser

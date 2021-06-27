@@ -7,7 +7,7 @@ from collections import defaultdict
 from PIL import Image as pil
 from PIL import ImageOps as pilops
 
-from sxicovid.cxr2.preprocessing import image_preprocess
+from covidx.cxr2.preprocessing import image_preprocess
 
 IMAGES_PATH = '/hdd/Datasets/covidx-cxr2/train'
 LABELS_FILEPATH = '/hdd/Datasets/covidx-cxr2/train.txt'

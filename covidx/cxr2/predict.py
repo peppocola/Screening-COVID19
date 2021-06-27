@@ -5,9 +5,9 @@ import shutil
 
 from PIL import Image as pil
 
-from sxicovid.cxr2.metrics import load_model
-from sxicovid.cxr2.dataset import load_subset_dataset
-from sxicovid.cxr2.preprocessing import image_preprocess
+from covidx.cxr2.metrics import load_model
+from covidx.cxr2.dataset import load_subset_dataset
+from covidx.cxr2.preprocessing import image_preprocess
 
 PREPROC_SUBSET_IMAGES_PATH = 'datasets/covidx-cxr2/subset/images'
 

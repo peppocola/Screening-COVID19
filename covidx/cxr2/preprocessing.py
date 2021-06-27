@@ -37,7 +37,7 @@ def image_preprocess(img, greyscale, crop, size, remove_top):
 
 if __name__ == '__main__':
     # Usage example:
-    #   python sxicovid/cxr2/preprocessing.py /hdd/Datasets/covidx-cxr2/train.txt --src-path /hdd/Datasets/covidx-cxr2/train \
+    #   python covidx/cxr2/preprocessing.py /hdd/Datasets/covidx-cxr2/train.txt --src-path /hdd/Datasets/covidx-cxr2/train \
     #       --greyscale --crop --size 224 224 --remove-top --dest-path datasets/covidx-cxr2/train
 
     # Instantiate the command line arguments parser

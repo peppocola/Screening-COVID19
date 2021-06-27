@@ -4,10 +4,10 @@ import torch
 import json
 import argparse
 
-from sxicovid.cxr2.models import CXR2Net
-from sxicovid.cxr2.dataset import load_test_dataset, load_train_valid_datasets
-from sxicovid.utils.evaluate import test_classifier
-from sxicovid.utils.plot import plot_cxr2_errors
+from covidx.cxr2.models import CXR2Net
+from covidx.cxr2.dataset import load_test_dataset, load_train_valid_datasets
+from covidx.utils.evaluate import test_classifier
+from covidx.utils.plot import plot_cxr2_errors
 
 MODELS_PATH = 'cxr2-models'
 

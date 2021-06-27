@@ -5,8 +5,8 @@ import numpy as np
 
 from tqdm import tqdm
 
-from sxicovid.cxr2.models import CXR2Net
-from sxicovid.utils.torch import EarlyStopping, RunningAverageMetric, get_optimizer
+from covidx.cxr2.models import CXR2Net
+from covidx.utils.torch import EarlyStopping, RunningAverageMetric, get_optimizer
 
 
 def train_classifier(

@@ -3,18 +3,18 @@ import os
 import torch
 
 from sklearn import metrics
-from sxicovid.ct.dataset import load_datasets
-from sxicovid.ct.models import CTNet
-from sxicovid.utils.plot import save_attention_map
+from covidx.ct.dataset import load_sequence_datasets
+from covidx.ct.models import CTSeqNet
+from covidx.utils.plot import save_attention_map_sequence
 
 MODELS_PATH = 'ct-models'
-MODEL_NAME = 'ct-resnet50-att2'
+MODEL_NAME = 'ct-resnet50-lstm-att2'
 
 if __name__ == '__main__':
-    _, _, test_data = load_datasets(num_classes=3)
+    _, _, test_data = load_sequence_datasets(num_classes=3)
 
     # Instantiate the model and load from folder
-    model = CTNet(num_classes=3)
+    model = CTSeqNet(input_size=16, num_classes=3)
     state_filepath = os.path.join(MODELS_PATH, MODEL_NAME + '.pt')
     model.load_state_dict(torch.load(state_filepath))
 
@@ -35,15 +35,15 @@ if __name__ == '__main__':
         for idx, (example, label) in enumerate(test_data):
             example = example.unsqueeze(0)
             example = example.to(device)
-            pred, map1, map2 = model(example, attention=True)
+            pred, seqs, map1, map2 = model(example, attention=True)
             pred = torch.log_softmax(pred, dim=1)
             pred = torch.argmax(pred, dim=1).item()
             y_pred.append(pred)
             y_true.append(label)
-            if idx < 250:
+            if idx < 100:
                 example = (example + 1) / 2
-                filepath = os.path.join('visualization/ct-attentions', '{}.png'.format(idx))
-                save_attention_map(filepath, example, map1, map2)
+                filepath = os.path.join('visualization/ct-attentions-seq', '{}.png'.format(idx))
+                save_attention_map_sequence(filepath, example, map1, map2, seqs)
 
     report = metrics.classification_report(y_true, y_pred, output_dict=True)
     cm = metrics.confusion_matrix(y_true, y_pred)

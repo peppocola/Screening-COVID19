@@ -2,11 +2,11 @@ import os
 import json
 import torch
 
-from sxicovid.cxr2.models import CXR2Net
-from sxicovid.utils.plot import save_history
-from sxicovid.utils.train import train_classifier
-from sxicovid.utils.evaluate import test_classifier
-from sxicovid.cxr2.dataset import load_train_valid_datasets, load_test_dataset
+from covidx.cxr2.models import CXR2Net
+from covidx.utils.plot import save_history
+from covidx.utils.train import train_classifier
+from covidx.utils.evaluate import test_classifier
+from covidx.cxr2.dataset import load_train_valid_datasets, load_test_dataset
 
 EXPERIMENTS_PATH = 'cxr2-experiments'
 

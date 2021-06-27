@@ -3,7 +3,7 @@ import torchvision
 
 from torch.hub import load_state_dict_from_url
 from torchvision.models.resnet import model_urls
-from sxicovid.ct.layers import LinearAttention1d, LinearAttention2d
+from covidx.ct.layers import LinearAttention1d, LinearAttention2d
 
 
 class CTNet(torchvision.models.ResNet):
